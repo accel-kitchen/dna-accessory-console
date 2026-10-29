@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNA LED Console</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <h1>DNA LED Console</h1>
+  </div>
+  <div class="conn">
+    <span id="connPill" class="pill off">未接続</span>
+    <button id="btnConnect" class="primary">接続</button>
+  </div>
+</header>
+
+<div id="notice" class="notice" hidden></div>
+
+<main class="layout">
+  <section class="panel boardPanel" aria-label="基板プレビュー">
+    <h2>基板プレビュー</h2>
+    <svg id="board" role="img" aria-label="DNA基板のLED配置"></svg>
+    <label class="check"><input type="checkbox" id="fxPreview"> エフェクト・フレーム切替をプレビュー</label>
+    <p class="hint">LEDをクリックすると、選んだ筆で塗れます。</p>
+  </section>
+
+  <div class="panels">
+    <section class="panel" id="codonPanel">
+      <h2>コドン枠</h2>
+      <p class="hint">基板の4か所（3塩基対 = 6個ずつ）に表示するコドン。鎖A（5′→3′）の配列を指定します。</p>
+      <div id="slots" class="slots"></div>
+      <label class="check"><input type="checkbox" id="complement" checked> 相補鎖（鎖B）も点灯する</label>
+    </section>
+
+    <section class="panel" id="textPanel">
+      <h2>文字 → コドン</h2>
+      <div class="row">
+        <input id="textInput" type="text" placeholder="例: MASK  /  DNA" autocomplete="off" spellcheck="false" aria-label="変換する文字列">
+        <select id="textMode" aria-label="変換方式">
+          <option value="amino">アミノ酸1文字（標準遺伝暗号）</option>
+          <option value="ascii6">6bit ASCII（全文字対応）</option>
+        </select>
+      </div>
+      <div id="chips" class="chips" aria-live="polite"></div>
+      <div class="row">
+        <button id="btnApplyText" class="primary">基板に表示</button>
+        <span id="textInfo" class="hint"></span>
+      </div>
+    </section>
+
+    <section class="panel" id="paintPanel">
+      <h2>ペイント</h2>
+      <div class="row wrap">
+        <div class="seg" id="brushes" role="radiogroup" aria-label="筆"></div>
+        <input type="color" id="customColor" value="#ff00ff" aria-label="任意色">
+      </div>
+      <div class="row wrap">
+        <span class="lbl">単位</span>
+        <div class="seg" id="units" role="radiogroup" aria-label="単位">
+          <button data-unit="led">LED</button>
+          <button data-unit="pair">塩基対</button>
+          <button data-unit="codon">コドン</button>
+        </div>
+      </div>
+      <details class="palette">
+        <summary>塩基の色</summary>
+        <div class="row wrap" id="paletteRow"></div>
+      </details>
+    </section>
+
+    <section class="panel" id="framePanel">
+      <h2>フレーム <span id="frameCount" class="count"></span></h2>
+      <div id="frameStrip" class="strip"></div>
+      <div class="row wrap">
+        <button id="btnFrameAdd">追加</button>
+        <button id="btnFrameDup">複製</button>
+        <button id="btnFrameDel">削除</button>
+        <button id="btnFrameLeft" aria-label="左へ">◀</button>
+        <button id="btnFrameRight" aria-label="右へ">▶</button>
+        <button id="btnClearFrame">現在のフレームを消灯</button>
+        <button id="btnDefault">初期配列に戻す</button>
+      </div>
+      <label class="slider">切替間隔 <output id="holdOut"></output>
+        <input type="range" id="hold" min="200" max="5000" step="100">
+      </label>
+    </section>
+
+    <section class="panel" id="outPanel">
+      <h2>出力・機器</h2>
+      <label class="slider">明るさ <output id="briOut"></output>
+        <input type="range" id="bri" min="0" max="128" step="1">
+      </label>
+      <div class="row wrap">
+        <label class="inline">エフェクト
+          <select id="fx">
+            <option value="0">固定</option>
+            <option value="1">成長（対ごとに増える）</option>
+            <option value="2">呼吸</option>
+            <option value="3">波（らせんに沿う）</option>
+            <option value="4">コドン走査</option>
+          </select>
+        </label>
+        <label class="slider grow">速さ <output id="speedOut"></output>
+          <input type="range" id="speed" min="1" max="10" step="1">
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" id="autoSend" checked> 編集するたびに自動送信</label>
+      <div class="row wrap">
+        <button id="btnSend" class="primary">送信</button>
+        <button id="btnSave">保存（フラッシュ）</button>
+        <button id="btnRead">読み戻し</button>
+        <button id="btnTest">動作テスト</button>
+      </div>
+      <div class="row wrap">
+        <button id="btnExport">JSON書き出し</button>
+        <button id="btnImport">JSON読込</button>
+        <input type="file" id="fileImport" accept="application/json,.json" hidden>
+      </div>
+    </section>
+
+    <section class="panel" id="logPanel">
+      <h2>ログ</h2>
+      <pre id="log" class="log" aria-live="polite"></pre>
+    </section>
+  </div>
+</main>
+
+<script src="board-data.js"></script>
+<script src="codons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
