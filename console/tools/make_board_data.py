@@ -1,7 +1,7 @@
-"""Generate console/web/board-data.js from the real design data.
+"""Generate console/board-data.js from the real design data.
 
 Inputs : design/dna-geometry.json (outline, holes), design/base-pairs.csv (LED positions)
-Output : console/web/board-data.js  (window.BOARD)
+Output : console/board-data.js  (window.BOARD)
 
 Run from the repository root:  python console/tools/make_board_data.py
 """
@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 GEOM = ROOT / "design" / "dna-geometry.json"
 PAIRS = ROOT / "design" / "base-pairs.csv"
-OUT = ROOT / "console" / "web" / "board-data.js"
+OUT = ROOT / "console" / "board-data.js"
 
 
 def ring_path(points):

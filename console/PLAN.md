@@ -37,11 +37,10 @@ console/
   README.md                    書き込み・起動・プロトコル
   firmware/dna_console/
     dna_console.ino            ファームウェア
-  web/
-    index.html  style.css      画面
-    app.js                     画面ロジック・Web Serial
-    codons.js                  遺伝暗号表・文字→コドン変換
-    board-data.js              基板外形・LED座標（生成物）
+  index.html  style.css        画面（console/ 直下。公開時は /console/ で開く）
+  app.js                       画面ロジック・Web Serial
+  codons.js                    遺伝暗号表・文字→コドン変換
+  board-data.js                基板外形・LED座標（生成物）
   tools/make_board_data.py     board-data.js の生成（design/ の実データから）
 ```
 

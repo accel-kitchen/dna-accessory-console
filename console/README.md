@@ -3,8 +3,8 @@
 DNAアクセサリー（XIAO nRF52840 + XL-1010RGBC-WS2812B × 24）の表示を、ブラウザから制御する。計画は [PLAN.md](PLAN.md)。
 
 - `firmware/dna_console/dna_console.ino`: 一度だけ書き込むスケッチ。USBシリアルの命令でLEDを表示する。
-- `web/`: コンソール本体（ビルド不要の静的ページ）。
-- `tools/make_board_data.py`: `design/` の実データから `web/board-data.js`（基板外形・LED座標）を生成。
+- `index.html` `app.js` `codons.js` `style.css` `board-data.js`: コンソール本体（ビルド不要の静的ページ。`console/` 直下）。
+- `tools/make_board_data.py`: `design/` の実データから `board-data.js`（基板外形・LED座標）を生成。
 
 ## 状態
 
@@ -26,10 +26,10 @@ DNAアクセサリー（XIAO nRF52840 + XL-1010RGBC-WS2812B × 24）の表示を
 
 ## 2. コンソールを開く
 
-Chrome または Edge（Web Serial対応）で `web/index.html` を開く。`file://` で動かない場合は次を実行して `http://localhost:8000/` を開く。
+Chrome または Edge（Web Serial対応）で `console/index.html` を開く。`file://` で動かない場合は次を実行して `http://localhost:8000/` を開く。
 
 ```bash
-python -m http.server 8000 --directory console/web
+python -m http.server 8000 --directory console
 ```
 
 機器が無くてもプレビューは使える（その場合「接続」は無効）。

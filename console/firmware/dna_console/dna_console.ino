@@ -3,7 +3,7 @@
 //
 // Chain order = reference order: pixel 0 = U2, pixel 1 = U3, ... pixel 23 = U25.
 // Pair k = pixels 2k (strand A) and 2k+1 (strand B). Codon c = pairs 3c..3c+2 (pixels 6c..6c+5).
-// The web console in ../../web sends frames (24 x RRGGBB) and settings; this sketch only plays them.
+// The web console (index.html in ../../) sends frames (24 x RRGGBB) and settings; this sketch only plays them.
 // Protocol: one ASCII command per line, answered with "OK ..." or "ERR ...". See ../../README.md.
 //
 // Needs the "Adafruit NeoPixel" library and the Seeed nRF52 board package (use the D6 macro, not a bare 6).
