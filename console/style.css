@@ -25,7 +25,7 @@
 .pill.on{color:#2E7A55;border-color:#9FCDB1;background:#E5F3EA}
 
 /* ---- bench ---- */
-.bench{display:grid;grid-template-columns:minmax(420px,1.2fr) minmax(0,1fr);gap:clamp(14px,2vw,32px);align-items:start;padding-bottom:48px}
+.bench{display:grid;grid-template-columns:minmax(420px,1fr) minmax(0,1fr);gap:clamp(14px,2vw,32px);align-items:start;padding-bottom:48px}
 /* the board and the 3D model sit directly on the paper, no card around them */
 .stage{position:sticky;top:64px;color:var(--ink)}
 .stage-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 4px 4px;flex-wrap:wrap;border-bottom:1.5px solid var(--ink)}
@@ -73,11 +73,11 @@
 /* ---- tabs ---- */
 .work{min-width:0}
 .tabs{display:flex;gap:4px;border-bottom:1.5px solid var(--ink);margin-bottom:14px;flex-wrap:wrap}
-.tab{padding:9px 18px 8px;border:1.5px solid transparent;border-bottom:0;border-radius:12px 12px 0 0;font-weight:700;font-size:14px;color:var(--ink-3);position:relative;top:1.5px;letter-spacing:.06em}
+.tab{padding:9px clamp(9px,1.2vw,16px) 8px;white-space:nowrap;border:1.5px solid transparent;border-bottom:0;border-radius:12px 12px 0 0;font-weight:700;font-size:13.5px;color:var(--ink-3);position:relative;top:1.5px;letter-spacing:.04em}
 .tab:hover{color:var(--ink)}
 .tab[aria-selected=true]{background:var(--card);border-color:var(--ink);color:var(--ink)}
 .tab[aria-selected=true]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:3px;background:var(--card)}
-.tab small{font-family:var(--f-disp-en);font-style:italic;font-weight:500;color:var(--rose-2);margin-right:6px}
+.tab small{font-family:var(--f-disp-en);font-style:italic;font-weight:500;color:var(--rose-2);margin-right:5px}
 .tabpanel[hidden]{display:none}
 .tabpanel{display:grid;gap:16px}
 

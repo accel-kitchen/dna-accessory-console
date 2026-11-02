@@ -45,7 +45,7 @@
     sel: 0, selPos: 2,
   };
   const PERSIST_KEYS = ["frames", "cur", "hold", "bri", "fx", "speed", "palette", "complement", "text", "textMode", "textChoices", "brush", "unit", "customColor", "autoSend", "previewFx", "autoRotate", "colorMode", "sel", "selPos"];
-  const V = { tab: "codon", hoverPair: -1, hoverCodon: null, trace: -1 };   // view-only state
+  const V = { tab: "alpha", hoverPair: -1, hoverCodon: null, trace: -1 };   // view-only state
 
   function loadSaved() {
     try {
@@ -290,7 +290,7 @@
 
   // ---- 3D model hook ---------------------------------------------------------------------------
   function helixHover(k) { if (window.Helix && window.Helix.ready && window.Helix.setHover) window.Helix.setHover(k); }
-  function focusedCodon() { return V.trace >= 0 ? V.trace : (V.tab === "codon" ? S.sel : -1); }
+  function focusedCodon() { return V.trace >= 0 ? V.trace : (V.tab === "alpha" || V.tab === "codon" ? S.sel : -1); }
   function pushHelix(now) {
     const H = window.Helix;
     if (!H || !H.ready) return;
@@ -533,12 +533,18 @@
     const codon = slotCodon(frame(), S.sel);
     const aa = codon ? C.aaOf(codon) : null;
     Object.keys(alphaEls).forEach((ch) => alphaEls[ch].setAttribute("aria-pressed", String(aa !== null && ch === aa)));
-    const box = $("alphaIntro");
-    if (!codon) { box.innerHTML = '<p class="sy">選んでいる枠が空です。下の文字を選ぶと、ここに紹介が出ます。</p>'; return; }
-    const A = AM.AA[aa], cls = AM.CLASSES[A.cls];
-    box.innerHTML = `<div class="fig">${AM.mascot(aa, { size: 66 })}</div><div><span class="n">${A.ja}</span><span class="cd">${codon}</span>
+    renderIntro($("alphaIntro"), codon);
+  }
+  // short introduction of an amino acid, shown right next to whatever the user is picking from
+  function renderIntro(box, codon) {
+    if (!codon) { box.innerHTML = '<p class="sy">選んでいる枠が空です。ここから選ぶと、紹介が出ます。</p>'; return; }
+    const aa = C.aaOf(codon), A = AM.AA[aa], cls = AM.CLASSES[A.cls];
+    box.innerHTML = `<div class="fig">${AM.mascot(aa, { size: 66 })}</div><div><span class="n">${A.ja}</span><span class="cd">${codon}</span>${aa === "*" ? "" : `<span class="cd" style="color:var(--ink-3)">${aa}</span>`}
       <span class="badge" style="color:${cls.stroke};border-color:${cls.stroke};background:${cls.fill};margin:0 0 0 8px">${cls.label}</span>
       <p class="sy">${A.says}</p><p>${A.fact}</p></div>`;
+  }
+  function renderWheelIntro() {
+    renderIntro($("wheelIntro"), V.hoverCodon || slotCodon(frame(), S.sel));
   }
 
   // ---- genetic code wheel ----------------------------------------------------------------------
@@ -546,7 +552,7 @@
   function buildWheel() {
     wheel = window.WHEEL.build($("wheel"), {
       onPick(codon) { setSlot(S.sel, codon); },
-      onHover(codon) { V.hoverCodon = codon; wheel.update(wheelState()); },
+      onHover(codon) { V.hoverCodon = codon; wheel.update(wheelState()); renderWheelIntro(); },
     });
     $("legend").innerHTML = ["hydrophobic", "polar", "acidic", "basic", "special", "stop"].map((k) => `<span><i style="background:${AM.CLASSES[k].fill};border-color:${AM.CLASSES[k].stroke}"></i>${AM.CLASSES[k].label}</span>`).join("");
   }
@@ -568,55 +574,6 @@
     });
     h += ["A", "G"].map((k) => `<div class="gcard" style="grid-column:1/-1"><h3><span class="big">${k}–${C.complement(k)}</span>水素結合 ${k === "A" ? 2 : 3} 本</h3>${MOL.pairFigure(k, { colors, scale: 30 })}<p>点線が水素結合です。「糖」と書いた丸は、骨格のデオキシリボースにつながる位置。大きいプリン塩基と小さいピリミジン塩基が組むので、どの塩基対も幅はほぼ同じになります。</p></div>`).join("");
     $("guide").innerHTML = h;
-  }
-
-  // ---- text -> codons --------------------------------------------------------------------------
-  let converted = [];
-  function convertText() {
-    converted = Array.from(S.text).map((ch, i) => C.charToCodon(ch, S.textMode, S.textChoices[i] || 0));
-  }
-  function renderChips() {
-    const wrap = $("chips");
-    wrap.textContent = "";
-    const limit = MAX_FRAMES * N_CODONS;
-    converted.forEach((r, i) => {
-      const chip = document.createElement("div");
-      chip.className = "chip" + (r.kind !== "ok" ? " none" : "") + (i >= limit ? " over" : "") + ((i % N_CODONS === N_CODONS - 1) ? " group-end" : "");
-      const ch = r.ch === " " ? "␣" : r.ch;
-      chip.innerHTML = `<span class="c"></span><span class="k"></span><span class="a"></span>`;
-      chip.querySelector(".c").textContent = ch;
-      chip.querySelector(".k").textContent = r.codon || "···";
-      chip.querySelector(".a").textContent = r.kind === "ok" ? (r.aa === "*" ? "Stop" : AM.AA[r.aa].ja) : r.note;
-      if (r.kind === "ok" && r.options > 1) {
-        chip.classList.add("cycle");
-        chip.tabIndex = 0;
-        chip.setAttribute("role", "button");
-        chip.title = `同義コドン ${r.options} 種。クリックで切替`;
-        const cycle = () => { S.textChoices[i] = (S.textChoices[i] || 0) + 1; convertText(); renderChips(); persist(); };
-        chip.addEventListener("click", cycle);
-        chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cycle(); } });
-      }
-      wrap.appendChild(chip);
-    });
-    const n = converted.length;
-    const frames = Math.min(MAX_FRAMES, Math.ceil(n / N_CODONS));
-    const none = converted.filter((r) => r.kind === "none").length;
-    let info = n ? `${n}文字 → ${frames}フレーム` : "文字を入力してください";
-    if (n > limit) info += `（${limit}文字を超えた分は無視）`;
-    if (none) info += ` / 対応なし ${none}文字は消灯`;
-    $("textInfo").textContent = info;
-    $("btnApplyText").disabled = !n;
-  }
-  function applyText() {
-    const list = converted.slice(0, MAX_FRAMES * N_CODONS);
-    if (!list.length) return;
-    const frames = [];
-    for (let i = 0; i < list.length; i += N_CODONS) {
-      frames.push(codonsToFrame([0, 1, 2, 3].map((j) => (list[i + j] ? list[i + j].codon : null)), S.complement));
-    }
-    S.frames = frames;
-    S.cur = 0;
-    changed();
   }
 
   // ---- translation animation -------------------------------------------------------------------
@@ -746,8 +703,6 @@
     $("fxPreview").checked = S.previewFx;
     $("autoRotate").checked = S.autoRotate;
     $("colorMode").value = S.colorMode;
-    $("textInput").value = S.text;
-    $("textMode").value = S.textMode;
   }
 
   // ---- tabs ------------------------------------------------------------------------------------
@@ -755,6 +710,8 @@
     V.tab = name;
     document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.id === "tab-" + name)));
     document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "p-" + name));
+    if (name === "alpha") $("alphaCard").after($("inspector"));
+    else if (name === "codon") $("wheelCard").after($("inspector"));
     renderSlots(); pushHelix();
   }
   function wireTabs() {
@@ -771,8 +728,8 @@
   function renderAll(light) {
     applyUiColours();
     renderSlots(); renderAlpha(); renderInspector(); renderPaint(); renderFrames(); renderOutput();
-    if (!light) { convertText(); renderChips(); }
     if (wheel) wheel.update(wheelState());
+    renderWheelIntro();
     pushHelix();
   }
   function changed() {
@@ -995,10 +952,6 @@
     $("btnRead").addEventListener("click", readBack);
     $("btnTest").addEventListener("click", () => simple("TEST", "動作テスト完了（24個が順に点灯したか確認）"));
 
-    $("textInput").addEventListener("input", (e) => { S.text = e.target.value; S.textChoices = []; convertText(); renderChips(); persist(); });
-    $("textInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) applyText(); });
-    $("textMode").addEventListener("change", (e) => { S.textMode = e.target.value; S.textChoices = []; convertText(); renderChips(); persist(); });
-    $("btnApplyText").addEventListener("click", applyText);
     $("btnTranslate").addEventListener("click", startTranslate);
     $("complement").addEventListener("change", (e) => { S.complement = e.target.checked; persist(); });
     $("fxPreview").addEventListener("change", (e) => { S.previewFx = e.target.checked; persist(); pushHelix(); });
@@ -1042,8 +995,6 @@
   wireTabs();
   wire();
   setConn(false);
-  convertText();
-  renderChips();
   renderAll();
   requestAnimationFrame(loop);
   whenHelix(bindHelix);

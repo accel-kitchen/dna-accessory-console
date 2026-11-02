@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="theme.css?v=9">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="theme.css?v=13">
+<link rel="stylesheet" href="style.css?v=13">
 <script type="importmap">{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"}}</script>
 </head>
 <body>
@@ -78,17 +78,17 @@
 
     <div class="work">
       <div class="tabs" role="tablist" aria-label="操作">
-        <button class="tab" role="tab" id="tab-codon" aria-controls="p-codon" aria-selected="true"><small>01</small>コドン</button>
-        <button class="tab" role="tab" id="tab-text" aria-controls="p-text" aria-selected="false"><small>02</small>文字</button>
+        <button class="tab" role="tab" id="tab-alpha" aria-controls="p-alpha" aria-selected="true"><small>01</small>アルファベットから</button>
+        <button class="tab" role="tab" id="tab-codon" aria-controls="p-codon" aria-selected="false"><small>02</small>コドンから</button>
         <button class="tab" role="tab" id="tab-paint" aria-controls="p-paint" aria-selected="false"><small>03</small>個別・フレーム</button>
         <button class="tab" role="tab" id="tab-device" aria-controls="p-device" aria-selected="false"><small>04</small>機器</button>
       </div>
 
-      <!-- 01 コドン -->
-      <div class="tabpanel" id="p-codon" role="tabpanel" aria-labelledby="tab-codon">
+      <!-- 01 アルファベットから選ぶ -->
+      <div class="tabpanel" id="p-alpha" role="tabpanel" aria-labelledby="tab-alpha">
         <section class="card" id="alphaCard">
           <h2>アルファベット表 <em>alphabet</em></h2>
-          <p class="lead">アルファベット1文字は、アミノ酸1つを表します（M = メチオニン、など）。文字を選ぶと、そのアミノ酸のコドンが選んでいる枠に入り、紹介が出ます。</p>
+          <p class="lead">アルファベット1文字は、アミノ酸1つを表します（M = メチオニン、など）。文字を選ぶと、そのアミノ酸のコドンが、選んでいる枠（基板の右の1〜4）に入ります。</p>
           <div id="alphaIntro" class="aintro" aria-live="polite"></div>
           <div id="alpha" class="alpha" role="group" aria-label="アルファベット表"></div>
           <p id="alphaNote" class="lead" style="margin:10px 0 0"></p>
@@ -98,40 +98,17 @@
           <h2><span id="inspTitle">選んだコドン</span> <em>inspector</em></h2>
           <div class="insp" id="insp"></div>
         </section>
-
-        <section class="card">
-          <h2>コドン表 <em>genetic code</em></h2>
-          <p class="lead">64通りのコドンと、指定されるアミノ酸の一覧。クリックすると、選んでいる枠のコドンが変わります。内側から1番目・2番目・3番目の塩基、その外側の<b>大きな英字がアルファベット1文字</b>（アミノ酸の記号。ATG なら M）、いちばん外側がアミノ酸の名前です。</p>
-          <div class="wheelbox"><svg id="wheel" role="group" aria-label="遺伝暗号の円形表"></svg></div>
-          <div class="legend" id="legend"></div>
-          <p class="wheelhelp">桃色の枠が「同じアミノ酸になる仲間」、黒い枠と番号が4つのコドンです。■は終止コドン（アルファベットは対応しません）。真ん中には、いま見ているコドンとアルファベット、アミノ酸の名前が出ます。</p>
-        </section>
-
-        <section class="card">
-          <h2>4つの塩基 <em>bases</em></h2>
-          <p class="lead">DNAの文字は A・T・G・C の4種類。大きさの違う2つのグループがあり、決まった相手とだけ水素結合でつながります。</p>
-          <div class="guide" id="guide"></div>
-        </section>
       </div>
 
-      <!-- 02 文字 -->
-      <div class="tabpanel" id="p-text" role="tabpanel" aria-labelledby="tab-text" hidden>
-        <section class="card">
-          <h2>文字をコドンに <em>text → codon</em></h2>
-          <p class="lead">入力した文字を、1文字につき1つのコドンに置きかえます。4文字ごとに1フレームになり、切り替えて表示されます。</p>
-          <div class="row">
-            <input id="textInput" type="text" placeholder="例: MASK / DNA" autocomplete="off" spellcheck="false" aria-label="変換する文字列">
-            <select id="textMode" aria-label="変換方式">
-              <option value="amino">アミノ酸1文字（標準遺伝暗号）</option>
-              <option value="ascii6">6bit ASCII（全文字対応）</option>
-            </select>
-          </div>
-          <div id="chips" class="chips"></div>
-          <div class="row">
-            <button id="btnApplyText" class="btn btn-primary" type="button">基板に表示</button>
-            <span id="textInfo" class="lbl"></span>
-          </div>
-          <p class="lead" style="margin-top:10px">「アミノ酸1文字」は M→ATG のように、アルファベット1文字が表すアミノ酸のコドンを使います（B・J・O・U・X・Z は対応なし）。「6bit ASCII」は、空白から「_」までの64文字を、塩基3つ（2ビット×3）に1対1で割り当てます。</p>
+      <!-- 02 コドンから選ぶ -->
+      <div class="tabpanel" id="p-codon" role="tabpanel" aria-labelledby="tab-codon" hidden>
+        <section class="card" id="wheelCard">
+          <h2>コドン表 <em>genetic code</em></h2>
+          <p class="lead">64通りのコドンと、指定されるアミノ酸の一覧。クリックすると、選んでいる枠のコドンが変わります。内側から1番目・2番目・3番目の塩基、その外側の<b>大きな英字がアルファベット1文字</b>（アミノ酸の記号。ATG なら M）、いちばん外側がアミノ酸の名前です。</p>
+          <div id="wheelIntro" class="aintro" aria-live="polite"></div>
+          <div class="wheelbox"><svg id="wheel" role="group" aria-label="遺伝暗号の円形表"></svg></div>
+          <div class="legend" id="legend"></div>
+          <p class="wheelhelp">桃色の枠が「同じアミノ酸になる仲間」、黒い枠と番号が4つのコドンです。■は終止コドン（アルファベットは対応しません）。マウスを重ねると、そのコドンの紹介が上に出ます。</p>
         </section>
 
         <section class="card">
@@ -140,6 +117,12 @@
           <div class="row"><button id="btnTranslate" class="btn btn-ghost" type="button">読み取りを始める</button><span id="trInfo" class="lbl"></span></div>
           <div class="rib" id="rib"></div>
           <div class="peptide" id="peptide" aria-live="polite"></div>
+        </section>
+
+        <section class="card">
+          <h2>4つの塩基 <em>bases</em></h2>
+          <p class="lead">DNAの文字は A・T・G・C の4種類。大きさの違う2つのグループがあり、決まった相手とだけ水素結合でつながります。</p>
+          <div class="guide" id="guide"></div>
         </section>
       </div>
 
@@ -213,12 +196,12 @@
   </footer>
 </div>
 
-<script src="board-data.js?v=9"></script>
-<script src="codons.js?v=9"></script>
-<script src="aminoacids.js?v=9"></script>
-<script src="molecules.js?v=9"></script>
-<script src="wheel.js?v=9"></script>
-<script src="app.js?v=9"></script>
-<script type="module" src="helix.js?v=9"></script>
+<script src="board-data.js?v=13"></script>
+<script src="codons.js?v=13"></script>
+<script src="aminoacids.js?v=13"></script>
+<script src="molecules.js?v=13"></script>
+<script src="wheel.js?v=13"></script>
+<script src="app.js?v=13"></script>
+<script type="module" src="helix.js?v=13"></script>
 </body>
 </html>
