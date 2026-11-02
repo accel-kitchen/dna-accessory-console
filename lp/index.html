@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CODON GLOW｜塩基配列で言葉を光らせる DNA アクセサリー</title>
+<meta name="description" content="12 塩基対・24 個のフルカラー LED を持つ DNA 二重らせん型アクセサリー。コドンを光らせ、アミノ酸の一文字コードでメッセージを綴る。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2710%27 cy=%2716%27 r=%276%27 fill=%27%2346f0a0%27/%3E%3Ccircle cx=%2722%27 cy=%2716%27 r=%276%27 fill=%27%234aa8ff%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top"><i></i><span>CODON GLOW</span></a>
+    <ul>
+      <li><a href="#concept">しくみ</a></li>
+      <li><a href="#code">コドン表</a></li>
+      <li><a href="#demo">体験する</a></li>
+      <li><a href="#design">設計</a></li>
+      <li><a href="#scene">シーン</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="top">
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">DNA LIGHT ACCESSORY ・ PROTOTYPE</p>
+      <h1>塩基が光り、<br><em>言葉</em>になる。</h1>
+      <p class="lead">12 塩基対、24 個のフルカラー LED でできた DNA 二重らせんのアクセサリー。<br>A・T・G・C の並び「コドン」を光らせると、アミノ酸の一文字コードがメッセージとして読み取れます。</p>
+      <div class="readout" id="readout">
+        <div class="codon"><span class="n">01</span><div class="l">?</div><div class="t"><b>·</b><b>·</b><b>·</b></div></div>
+        <div class="codon"><span class="n">02</span><div class="l">?</div><div class="t"><b>·</b><b>·</b><b>·</b></div></div>
+        <div class="codon"><span class="n">03</span><div class="l">?</div><div class="t"><b>·</b><b>·</b><b>·</b></div></div>
+        <div class="codon"><span class="n">04</span><div class="l">?</div><div class="t"><b>·</b><b>·</b><b>·</b></div></div>
+      </div>
+      <div class="msg" id="heroMsg">MESSAGE</div>
+      <div class="cta">
+        <a class="btn pri" href="#demo">自分の言葉を光らせる →</a>
+        <a class="btn" href="#concept">しくみを見る</a>
+      </div>
+    </div>
+    <div class="board-wrap hero-board-wrap">
+      <div class="board" id="heroBoard"><img src="assets/img/board-top.png" alt="DNA 二重らせん型基板の 3D レンダリング（表面）"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCEPT -->
+<section id="concept">
+  <div class="wrap">
+    <p class="eyebrow rv">01 ／ CONCEPT</p>
+    <h2 class="rv">4 色の光が、<em>1 文字</em>を作る。</h2>
+    <p class="lead rv">DNA は A・T・G・C の 4 種類の塩基の並びで情報を記録します。3 つ並んだ塩基＝<b>コドン</b>が、アミノ酸 1 種類を指定します。この仕組みをそのまま光に置き換えました。</p>
+    <div class="steps">
+      <div class="step rv">
+        <div class="no">STEP 1</div><h3>塩基を 4 色で光らせる</h3>
+        <div class="dots"><span class="dot" data-b="A">A</span><span class="dot" data-b="T">T</span><span class="dot" data-b="G">G</span><span class="dot" data-b="C">C</span></div>
+        <p>1 つの塩基対は 2 個の LED。向かい合う LED は A↔T、G↔C の相補ペアで同時に光ります。</p>
+      </div>
+      <div class="step rv">
+        <div class="no">STEP 2</div><h3>3 塩基で 1 コドン</h3>
+        <div class="dots"><span class="dot" data-b="A">A</span><span class="dot" data-b="T">T</span><span class="dot" data-b="G">G</span><span class="arrow">→</span><span class="dot sq">M</span></div>
+        <p>3 つの塩基対（6 個の LED）が 1 つのコドン。ATG なら「M（メチオニン）」、読み始めの合図でもあります。</p>
+      </div>
+      <div class="step rv">
+        <div class="no">STEP 3</div><h3>コドンを並べて文章に</h3>
+        <div class="dots"><span class="dot sq">M</span><span class="dot sq">A</span><span class="dot sq">S</span><span class="dot sq" style="background:#ff8a9c">■</span></div>
+        <p>基板には 4 コドン分の LED。最後に終止コドン（TAA・TAG・TGA）を置けば、そこで「文章の終わり」。</p>
+      </div>
+    </div>
+    <div class="legend rv">
+      <span><i style="background:var(--A);box-shadow:0 0 10px var(--A)"></i>A アデニン</span>
+      <span><i style="background:var(--T);box-shadow:0 0 10px var(--T)"></i>T チミン</span>
+      <span><i style="background:var(--G);box-shadow:0 0 10px var(--G)"></i>G グアニン</span>
+      <span><i style="background:var(--C);box-shadow:0 0 10px var(--C)"></i>C シトシン</span>
+    </div>
+  </div>
+</section>
+
+<!-- CODE TABLE -->
+<section id="code">
+  <div class="wrap">
+    <p class="eyebrow rv">02 ／ GENETIC CODE</p>
+    <h2 class="rv">アルファベットは、<em>遺伝暗号</em>から。</h2>
+    <p class="lead rv">20 種類のアミノ酸にはそれぞれ英字 1 文字が割り当てられています。たとえば L・I・F・E で「LIFE」。同じ文字でも複数のコドンがあるので、<b>同じメッセージを別の光り方</b>で表現できます。タップするとデモに追加されます。</p>
+    <div class="table rv" id="table"></div>
+    <p class="note rv">使えない文字：B・J・O・U・X・Z（アミノ酸コードに存在しません）。標準遺伝暗号に基づく対応表です。</p>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo" id="demo">
+  <div class="wrap">
+    <div class="board-wrap">
+      <div class="board" id="demoBoard"><img src="assets/img/board-top.png" alt="LED を点灯させた基板のシミュレーション"></div>
+    </div>
+    <div>
+      <p class="eyebrow rv">03 ／ TRY IT</p>
+      <h2 class="rv">4 文字までの言葉を、<br><em>DNA</em>に書き込む。</h2>
+      <p class="lead rv">英字を入力すると、対応するコドンと LED の色がその場で決まります。文字数が 4 に満たないときは、残りを終止コドンで埋めます。</p>
+      <div class="field rv"><input id="word" type="text" maxlength="8" inputmode="latin" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="メッセージ（英字 4 文字まで）" placeholder="LIFE"></div>
+      <div class="presets rv">
+        <button class="chip" data-w="LIFE" type="button">LIFE</button>
+        <button class="chip" data-w="DNA" type="button">DNA</button>
+        <button class="chip" data-w="GIFT" type="button">GIFT</button>
+        <button class="chip" data-w="WISH" type="button">WISH</button>
+        <button class="chip" data-w="HELP" type="button">HELP</button>
+        <button class="chip" data-w="KISS" type="button">KISS</button>
+      </div>
+      <div class="hint" id="hint" role="status"></div>
+      <div class="slots" id="slots">
+        <div class="slot"><div class="top"><span>CODON 1</span><span>PAIR 1–3</span></div><div class="big">–</div><div class="seq"></div><div class="seq c"></div><div class="tag"></div></div>
+        <div class="slot"><div class="top"><span>CODON 2</span><span>PAIR 4–6</span></div><div class="big">–</div><div class="seq"></div><div class="seq c"></div><div class="tag"></div></div>
+        <div class="slot"><div class="top"><span>CODON 3</span><span>PAIR 7–9</span></div><div class="big">–</div><div class="seq"></div><div class="seq c"></div><div class="tag"></div></div>
+        <div class="slot"><div class="top"><span>CODON 4</span><span>PAIR 10–12</span></div><div class="big">–</div><div class="seq"></div><div class="seq c"></div><div class="tag"></div></div>
+      </div>
+      <div class="bar">
+        <button class="btn" id="alt" type="button">別のコドンで光らせる ↻</button>
+        <button class="btn" id="replay" type="button">もう一度点灯 ▶</button>
+      </div>
+      <p class="note">各コドンの下段は相補鎖。基板上では向かい合う LED がその塩基で光ります。点灯はブラウザ上のシミュレーションです。</p>
+    </div>
+  </div>
+</section>
+
+<!-- DESIGN / 3D CAD -->
+<section id="design">
+  <div class="wrap">
+    <p class="eyebrow rv">04 ／ HARDWARE DESIGN</p>
+    <h2 class="rv">らせんのかたちを、<em>基板そのもの</em>に。</h2>
+    <p class="lead rv">外形は 2 回転ぶんの二重らせん。LED・マイコン・コネクタまで 3D CAD で全部品を配置し、部品同士の干渉を確認しながら設計しています。シルクには糖・リン酸・水素結合・塩基対の番号を描き込みました。塩基の色は LED が決めるので、塩基の文字は印刷していません。吊り下げ穴は USB-C 側の左右の耳にあり、チェーンを通すと、らせんが下に垂れます。</p>
+    <div class="gallery">
+      <figure class="shot big rv"><img src="assets/img/board-tilt.png" alt="基板全体の 3D CAD レンダリング（斜め上から）" width="1000" height="817"><figcaption>3D CAD ／ 全体</figcaption></figure>
+      <figure class="shot tall rv"><img src="assets/img/collar-front.png" alt="襟部分（表）：電池コネクタ" width="1095" height="1100"><figcaption>表 ／ 電池コネクタ（JST PH 2 ピン）</figcaption></figure>
+      <figure class="shot tall rv"><img src="assets/img/collar-back.png" alt="襟部分（裏）：マイコンモジュール" width="1096" height="1100"><figcaption>裏 ／ USB-C マイコンモジュール</figcaption></figure>
+    </div>
+    <div class="specs rv">
+      <div class="spec"><b>24</b><span>アドレサブル RGB LED<br>（WS2812B 系・個別に色指定）</span></div>
+      <div class="spec"><b>12</b><span>塩基対<br>＝ 4 コドン</span></div>
+      <div class="spec"><b>24×82</b><span>mm ／ 基板サイズ<br>吊り下げ穴 φ2 mm ×2（USB-C 側）</span></div>
+      <div class="spec"><b>USB-C</b><span>で書き換え<br>電池駆動を想定</span></div>
+    </div>
+    <p class="note rv">基板上のシルクは試作の初期配列 ATG GCA TCG TAA（M・A・S・STOP）。LED は 1 個ずつ色を指定できるため、光らせる配列はソフトウェアで変更できる設計です。</p>
+  </div>
+</section>
+
+<!-- SCENES -->
+<section id="scene">
+  <div class="wrap">
+    <p class="eyebrow rv">05 ／ IN YOUR LIFE</p>
+    <h2 class="rv">身につけて、<em>持ち歩く</em>。</h2>
+    <p class="lead rv">首から下げるペンダントにも、バッグのファスナーに付けるチャームにも。細長いらせんの形は、胸元や持ち物の上でゆれながら、夜の街にやわらかな光を落とします。</p>
+    <div class="scenes">
+      <figure class="sc vid rv" id="vidWalk"><video muted loop playsinline preload="none" poster="assets/img/scenes/scene-walk.jpg" data-src="assets/video/scene-walk.mp4"></video><figcaption><b>PENDANT</b>胸元で、歩くリズムに合わせて</figcaption></figure>
+      <figure class="sc rv"><img src="assets/img/scenes/scene-necklace.jpg" alt="黒いニットの胸元で光るDNA型ペンダント（イメージ）" loading="lazy"><figcaption><b>NECKLACE</b>黒い服に映える、4 色の光</figcaption></figure>
+      <figure class="sc vid rv" id="vidBag"><video muted loop playsinline preload="none" poster="assets/img/scenes/scene-bag.jpg" data-src="assets/video/scene-bag.mp4"></video><figcaption><b>BAG CHARM</b>ファスナーに付けて、歩くたびに点滅</figcaption></figure>
+      <figure class="sc rv"><img src="assets/img/scenes/scene-palm.jpg" alt="手のひらに載せたDNA型LEDアクセサリー（イメージ）" loading="lazy"><figcaption><b>IN HAND</b>手のひらサイズの二重らせん</figcaption></figure>
+    </div>
+    <p class="note rv">※ 活用シーンの写真・動画は生成 AI による参考イメージです。LED の数や配置、基板の細部は実際の設計と異なります。実機の仕様は設計データ（上記 3D CAD）をご参照ください。</p>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="fin">
+  <div class="wrap">
+    <p class="eyebrow rv">06 ／ NEXT</p>
+    <h2 class="rv">あなたの言葉は、<br>どんな<em>配列</em>になりますか。</h2>
+    <p class="lead rv" style="margin-inline:auto">名前、記念日、ひとこと。4 文字のメッセージを遺伝暗号に変えて、身につける。</p>
+    <div class="cta rv"><a class="btn pri" href="#demo">もう一度試す ↑</a></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>CODON GLOW</b>（仮称）／ DNA 二重らせん LED アクセサリー 試作プロジェクト</p>
+    <p>掲載の画像は KiCad の設計データから生成した 3D レンダリングです。点灯の様子はブラウザ上のシミュレーションで、実機の見え方・仕様は試作の進行により変わる場合があります。</p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

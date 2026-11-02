@@ -93,7 +93,8 @@ def pair_marks(side):
         # Hydrogen bonds: two dashed bars for A-T, three for G-C, one dash either side of the pair number.
         offs=(-.35,.35) if bonds==2 else (-.5,0,.5)
         for off in offs:
-            for x0,x1 in ((-1.75,-1.05),(1.05,1.75)):put_line(side,(100+x0,y+off),(100+x1,y+off))
+            end=min(1.75,PD/2-.94-.2)                            # keep clear of the LED outline bars
+            for x0,x1 in ((-end,-1.05),(1.05,end)):put_line(side,(100+x0,y+off),(100+x1,y+off))
         put_text(side,f'{i+1:02}',(100,y),.8)
 
 crossings=[START+(math.pi/2+k*math.pi-math.pi/12)*6*PP/(2*math.pi) for k in range(5)]

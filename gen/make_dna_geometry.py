@@ -17,11 +17,11 @@ from shapely.ops import unary_union
 ROOT=Path(__file__).resolve().parents[1]
 def env(name,default):return float(os.environ.get(name,default))
 CX=100.0
-PAIR_DISTANCE=env('DNA_D',6.0)        # LED centre to LED centre inside one base pair
-PAIR_PITCH=env('DNA_P',5.2)           # axial distance between base pairs
-AMPLITUDE=env('DNA_A',7.5)            # backbone swing around the axis
-RAIL_WIDTH=env('DNA_RAIL',4.0)
-RUNG_WIDTH=env('DNA_RUNG',4.0)
+PAIR_DISTANCE=env('DNA_D',5.5)        # LED centre to LED centre inside one base pair
+PAIR_PITCH=env('DNA_P',4.0)           # axial distance between base pairs
+AMPLITUDE=env('DNA_A',6.5)            # backbone swing around the axis
+RAIL_WIDTH=env('DNA_RAIL',3.2)
+RUNG_WIDTH=env('DNA_RUNG',3.0)
 PAIRS=12
 LENGTH=PAIRS*PAIR_PITCH               # one extra pitch below the last pair, as in revision 4
 END=118.0                             # the helix hands over to the collar here

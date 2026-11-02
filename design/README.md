@@ -66,18 +66,22 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 
 - `../fusion/` に Seeed Fusion PCBA 用のガーバー zip・BOM・位置ファイル・実装図・手順を作成。詳細は `../fusion/README.md`。
 
-## 改訂5：らせんの縮小・吊り穴の移動・塩基文字の削除（2026-11-02）
+## 改訂5：らせんの縮小・吊り穴の移動・塩基文字の削除（2026-11-02〜03）
 
-- 外形 29.0 × 116.6 mm → 24.0 × 96.9 mm（マイコン部の幅を29 → 24 mmに細くし、耳の分だけ下に延びた）。らせん部は約78 mm → 約62 mm、幅 26.8 mm → 19.0 mm。
-  LED間隔 10 mm → 6 mm、塩基対ピッチ 6.5 mm → 5.2 mm、梯子幅 4.0 mm。
-  これ以上詰めると、LED周りのビア・配線が収まらず（梯子幅3.8 mm以下で未配線が出る）、抜き穴も消えてベタ板になる。
+- 外形 29.0 × 116.6 mm → 24.0 × 82.1 mm。マイコン部の幅は29 → 24 mm（XIAOのパッドが約20 mm）。
+  らせん部は約78 mm → 約41 mm（全長のうち、らせんは12対 × 4.0 mm）、幅は26.8 → 16.2 mm。
+  LED間隔 10 → 5.5 mm、塩基対ピッチ 6.5 → 4.0 mm、梁幅 3.0 mm、バックボーン幅 3.2 mm、振幅 6.5 mm。
+  これ以上詰める限界の目安：ピッチ3.8 mmは配線が収束しにくく（銅箔〜外形 0.56 mm では未接続が残った）、3.6 mm以下は梁幅2.8 mm以下になりLED周りのビアが入らない。
+  ピッチ4.9 mm以下では抜き穴がほぼ消える（外形は梁のふくらみだけでらせんに見える）。
 - 吊り穴：らせん先端のφ3 mm を廃止し、マイコン部下端（USB-C側）の外側に、左右2つの耳（幅4 mm、長さ約4.5 mm）を延ばしてφ2.0 mm の穴を各1つ。
   耳の内側の間隔は16 mmで、USB-Cプラグはその間を通る。USB-C側を上にして吊る。
 - シルク：各段の塩基文字（T/C/A/G）を削除。対番号は中央に移動し、水素結合の破線は左右に分けた。
   配列2行・START/STOP・凡例・水素結合の本数は従来どおり。
 - 再生成手順：`gen/make_dna_geometry.py` → `gen/rebuild_dna_board.py`（起点は `pre-compact-20261102/` の配線済み基板）
-  → `gen/route_prep.py`（--swapは付けない）→ `gen/route_board.py` → `gen/route_apply.py`。
+  → `gen/route_prep.py`（--swapは付けない）→ `gen/route_board.py`（`WS=0.15 CL=0.16 WP=0.2 EDGE=0.56 VIAD=0.56`、失敗したネットを `PRIO` で先頭へ送って再試行）→ `gen/route_apply.py`。
   寸法は環境変数 `DNA_D / DNA_P / DNA_A / DNA_RAIL / DNA_RUNG` で変えられる。Shapelyは `gen/_deps/py313`（通常Python）と `gen/_deps/py311`（KiCad付属Python、`DNA_DEPS`）。
+  `EDGE` を0.55以下にすると、ラスタ化の誤差で銅箔〜外形が0.5 mmを割る（DRCの銅箔外形エラー）ので0.56を使う。
 - KiCad 9.0.4：DRC違反0、未接続0、回路図差異0（`wiring-drc.json`）。
 - 更新前の状態：`pre-compact-20261102/`。`base-pairs.csv` の `base` 列は配列上の塩基で、シルクには出ていない。
-- `../fusion/` の発注データは旧基板のまま。発注する場合は `gen/dump_assembly_data.py` → `gen/make_fusion_package.py` を再実行すること。
+- 発注データ（`../fusion/`）は改訂5に合わせて再生成済み（`gen/dump_assembly_data.py` → `gen/make_fusion_package.py`）。
+- 試作ページ `../lp/` は `gen/make_lp_images.py` で、画像（3Dレンダリング）とLED座標の対応を再生成する。

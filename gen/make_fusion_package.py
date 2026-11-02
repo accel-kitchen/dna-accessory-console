@@ -157,7 +157,7 @@ def page(side, scale=3.5, detail=None):
     svg = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.1f}" height="{H:.1f}" viewBox="0 0 {W:.1f} {H:.1f}" font-family="Helvetica">']
     svg.append(f'<rect width="100%" height="100%" fill="white"/>')
     svg.append(f'<text x="14" y="18" font-size="13" font-weight="bold">DNA LED pendant - {side.upper()} side assembly drawing</text>')
-    svg.append(f'<text x="14" y="30" font-size="7.5">{"Viewed from below (mirrored). " if mir else ""}PCB 29.05 x 116.64 mm, 2 layers, 1.6 mm.</text>')
+    svg.append(f'<text x="14" y="30" font-size="7.5">{"Viewed from below (mirrored). " if mir else ""}PCB {x1 - x0:.2f} x {y1 - y0:.2f} mm, 2 layers, 1.6 mm.</text>')
     svg.append(f'<text x="14" y="40" font-size="7.5">{"" if mir else "Black dot beside an LED = its pin 1 side. "}Designators are NOT printed on the board silkscreen.</text>')
     svg.append(outline_svg(mx, my, 0.4))
     for p in parts:

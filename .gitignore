@@ -16,9 +16,8 @@ gen/_runs/
 gen/__pycache__/
 __pycache__/
 
-# Backups of earlier revisions (git history keeps the current ones) and manufacturing output
+# Backups of earlier revisions (git history keeps the current ones)
 design/pre-*/
-fusion/
 
 # Office lock files
 ~$*
