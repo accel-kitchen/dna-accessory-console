@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="theme.css?v=2">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="theme.css?v=5">
+<link rel="stylesheet" href="style.css?v=5">
 <script type="importmap">{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"}}</script>
 </head>
 <body>
@@ -90,6 +90,14 @@
           <p class="lead">基板の4か所（3塩基対 = 6個ずつ）に表示するコドン。枠を選ぶと、下にそのコドンの中身が出ます。</p>
           <div id="slots" class="slots"></div>
           <label class="check"><input type="checkbox" id="complement" checked> 相補鎖（鎖B）も点灯する</label>
+        </section>
+
+        <section class="card" id="alphaCard">
+          <h2>アルファベット表 <em>alphabet</em></h2>
+          <p class="lead">アルファベット1文字は、アミノ酸1つを表します（M = メチオニン、など）。文字を選ぶと、そのアミノ酸のコドンが選んでいる枠に入り、紹介が出ます。</p>
+          <div id="alphaIntro" class="aintro" aria-live="polite"></div>
+          <div id="alpha" class="alpha" role="group" aria-label="アルファベット表"></div>
+          <p id="alphaNote" class="lead" style="margin:10px 0 0"></p>
         </section>
 
         <section class="card" id="inspector" aria-live="polite">
@@ -211,12 +219,12 @@
   </footer>
 </div>
 
-<script src="board-data.js?v=3"></script>
-<script src="codons.js?v=3"></script>
-<script src="aminoacids.js?v=3"></script>
-<script src="molecules.js?v=3"></script>
-<script src="wheel.js?v=3"></script>
-<script src="app.js?v=3"></script>
-<script type="module" src="helix.js?v=3"></script>
+<script src="board-data.js?v=5"></script>
+<script src="codons.js?v=5"></script>
+<script src="aminoacids.js?v=5"></script>
+<script src="molecules.js?v=5"></script>
+<script src="wheel.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script type="module" src="helix.js?v=5"></script>
 </body>
 </html>

@@ -490,6 +490,50 @@
     });
   }
 
+  // ---- alphabet table ------------------------------------------------------------------------
+  const ALPHA_NOTE = {
+    B: "B は「AspかAsnのどちらか」を表す曖昧記号で、コドンは決まりません。",
+    J: "J は「LeuかIle」を表す曖昧記号で、コドンは決まりません。",
+    Z: "Z は「GlnかGlu」を表す曖昧記号で、コドンは決まりません。",
+    X: "X は「どのアミノ酸でもよい」という記号で、コドンは決まりません。",
+    O: "O はピロリシンです。ふつうのコドン表にはなく、終止コドンTAGを特別に読みかえる一部の生物だけが使います。",
+    U: "U はセレノシステインです。ふつうのコドン表にはなく、終止コドンTGAを特別に読みかえて使う生物がいます。",
+  };
+  const alphaEls = {};
+  function buildAlpha() {
+    const wrap = $("alpha");
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ*".split("").forEach((ch) => {
+      const r = C.charToCodon(ch, "amino", 0);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "acell" + (r.kind === "ok" ? "" : " none");
+      b.dataset.letter = ch;
+      if (r.kind === "ok") {
+        b.innerHTML = `<span class="ltr">${ch === "*" ? "＊" : ch}</span>${AM.mascot(r.aa, { size: 46, tail: false })}<span class="minis">${r.codon.split("").map((x) => `<i data-b="${x}">${x}</i>`).join("")}</span><span class="nm">${r.aa === "*" ? "終止" : AM.AA[r.aa].ja}</span>`;
+        b.title = `${ch === "*" ? "終止" : ch} → ${r.codon}（${aaName(r.aa)}）`;
+        b.addEventListener("click", () => { setSlot(S.sel, r.codon); $("alphaNote").textContent = ""; });
+      } else {
+        b.innerHTML = `<span class="ltr">${ch}</span><span class="dash">–</span><span class="nm">対応なし</span>`;
+        b.title = ALPHA_NOTE[ch] || "対応するアミノ酸がありません";
+        b.setAttribute("aria-disabled", "true");
+        b.addEventListener("click", () => { $("alphaNote").textContent = ALPHA_NOTE[ch] || ""; });
+      }
+      wrap.appendChild(b);
+      alphaEls[ch] = b;
+    });
+  }
+  function renderAlpha() {
+    const codon = slotCodon(frame(), S.sel);
+    const aa = codon ? C.aaOf(codon) : null;
+    Object.keys(alphaEls).forEach((ch) => alphaEls[ch].setAttribute("aria-pressed", String(aa !== null && ch === aa)));
+    const box = $("alphaIntro");
+    if (!codon) { box.innerHTML = '<p class="sy">選んでいる枠が空です。下の文字を選ぶと、ここに紹介が出ます。</p>'; return; }
+    const A = AM.AA[aa], cls = AM.CLASSES[A.cls];
+    box.innerHTML = `<div class="fig">${AM.mascot(aa, { size: 66 })}</div><div><span class="n">${A.ja}</span><span class="cd">${codon}</span>
+      <span class="badge" style="color:${cls.stroke};border-color:${cls.stroke};background:${cls.fill};margin:0 0 0 8px">${cls.label}</span>
+      <p class="sy">${A.says}</p><p>${A.fact}</p></div>`;
+  }
+
   // ---- genetic code wheel ----------------------------------------------------------------------
   let wheel = null;
   function buildWheel() {
@@ -719,7 +763,7 @@
 
   function renderAll(light) {
     applyUiColours();
-    renderSlots(); renderInspector(); renderPaint(); renderFrames(); renderOutput();
+    renderSlots(); renderAlpha(); renderInspector(); renderPaint(); renderFrames(); renderOutput();
     if (!light) { convertText(); renderChips(); }
     if (wheel) wheel.update(wheelState());
     pushHelix();
@@ -986,6 +1030,7 @@
   buildBoard();
   buildSlots();
   buildPaint();
+  buildAlpha();
   buildWheel();
   buildGuide();
   wireTabs();
