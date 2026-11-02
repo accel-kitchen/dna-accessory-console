@@ -131,7 +131,7 @@
       1: `<path d="M31 49 Q35 44 39 49 M51 49 Q55 44 59 49" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
       2: `<circle cx="35" cy="48" r="4.4" fill="#fff" stroke="${ink}" stroke-width="1.6"/><circle cx="36" cy="49" r="2.2" fill="${ink}"/><circle cx="55" cy="48" r="4.4" fill="#fff" stroke="${ink}" stroke-width="1.6"/><circle cx="56" cy="49" r="2.2" fill="${ink}"/>`,
       3: `<circle cx="35" cy="48" r="3.4" fill="${ink}"/><path d="M49 49 Q55 43 61 49" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
-      4: `<path d="M31 47 L39 50 M59 47 L51 50" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/><circle cx="35" cy="52" r="2.6" fill="${ink}"/><circle cx="55" cy="52" r="2.6" fill="${ink}"/>`,
+      4: `<circle cx="35" cy="49" r="3.9" fill="${ink}"/><circle cx="36.3" cy="47.8" r="1.2" fill="#fff"/><circle cx="55" cy="49" r="3.9" fill="${ink}"/><circle cx="56.3" cy="47.8" r="1.2" fill="#fff"/>`,
       5: `<path d="M31 45 L39 53 M39 45 L31 53 M51 45 L59 53 M59 45 L51 53" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>`,
     }[v % 6];
     const mouths = [
@@ -139,7 +139,7 @@
       `<path d="M40 60 Q45 64 50 60" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
       `<ellipse cx="45" cy="62" rx="3.6" ry="4.2" fill="${ink}"/>`,
       `<path d="M38 62 Q41.5 58 45 62 Q48.5 66 52 62" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
-      `<path d="M39 61 L51 61" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`,
+      `<path d="M38 61 Q41.5 65 45 61 Q48.5 65 52 61" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
       `<path d="M38 64 Q45 58 52 64" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
     ];
     return eyes + mouths[v % 6];

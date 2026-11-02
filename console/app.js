@@ -478,8 +478,8 @@
       return `<button class="mtile" type="button" data-set="${a2}"><div class="cod">${a2.slice(0, pos)}<i>${a2[pos]}</i>${a2.slice(pos + 1)}</div>${AM.mascot(a2aa, { size: 58, tail: false })}<div class="nm">${aaName(a2aa)}</div><span class="kind ${k.cls}">${k.label}</span></button>`;
     }).join("")}</div>
       <p class="labcap" style="margin-top:8px">${pos === 2
-        ? `3番目の塩基は変わっても、同じアミノ酸になることが多い（ゆらぎ）。いまの3通りでは <b>${nSil}つ</b> が同義です。`
-        : `${POS_NAME[pos]}の塩基が変わると、アミノ酸も変わりやすい。いまの3通りでは <b>${nSil}つ</b> だけが同義です。`}
+        ? `3番目の塩基は変わっても、同じアミノ酸になることが多い（ゆらぎ）。この3通りのうち、同義は <b>${nSil}通り</b>。`
+        : `${POS_NAME[pos]}の塩基が変わると、アミノ酸も変わりやすい。この3通りのうち、同義は <b>${nSil}通り</b> だけ。`}
       タイルを押すと、基板と3Dモデルにも反映されます。</p></div>`;
     box.innerHTML = html;
     box.querySelectorAll("[data-set]").forEach((b) => b.addEventListener("click", () => setSlot(c, b.dataset.set)));
