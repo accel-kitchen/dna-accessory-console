@@ -2,135 +2,221 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DNA LED Console</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DNA LED Console｜加速キッチン</title>
+<meta name="description" content="コドンを選ぶと、基板のLEDと3Dの二重らせんが同じ色で光る。DNAアクセサリーを、遺伝暗号を学びながら制御するコンソール。">
+<meta name="theme-color" content="#FAF6EB">
+<link rel="icon" type="image/png" sizes="32x32" href="https://accel-kitchen.com/assets/images/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css?v=1">
+<link rel="stylesheet" href="style.css?v=1">
+<script type="importmap">{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"}}</script>
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <span class="mark" aria-hidden="true"></span>
-    <h1>DNA LED Console</h1>
-  </div>
-  <div class="conn">
-    <span id="connPill" class="pill off">未接続</span>
-    <button id="btnConnect" class="primary">接続</button>
+<div class="paper-rules" aria-hidden="true"></div>
+<div class="paper-warm" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="https://accel-kitchen.com/" aria-label="加速キッチン ホーム">
+      <img class="brand-logo" src="https://accel-kitchen.com/assets/images/accel-kitchen-logo-light.png" alt="加速キッチン" width="1441" height="321" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'加速キッチン'}))">
+      <span class="brand-sub">DNA LED Console</span>
+    </a>
+    <div class="conn">
+      <span id="connPill" class="pill">未接続</span>
+      <button id="btnConnect" class="btn btn-primary" type="button">接続</button>
+    </div>
   </div>
 </header>
 
-<div id="notice" class="notice" hidden></div>
+<div class="wrap">
+  <div id="notice" class="notice" hidden></div>
 
-<main class="layout">
-  <section class="panel boardPanel" aria-label="基板プレビュー">
-    <h2>基板プレビュー</h2>
-    <svg id="board" role="img" aria-label="DNA基板のLED配置"></svg>
-    <label class="check"><input type="checkbox" id="fxPreview"> エフェクト・フレーム切替をプレビュー</label>
-    <p class="hint">LEDをクリックすると、選んだ筆で塗れます。</p>
+  <section class="intro" aria-labelledby="h1">
+    <div class="intro-grid">
+      <div>
+        <span class="eyebrow">DNA Accessory · Console</span>
+        <h1 id="h1">コドンを選んで、<span class="hl">DNAを光らせる。<svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 9 C60 2, 120 13, 180 6 S270 4, 297 8"/></svg></span></h1>
+      </div>
+      <div>
+        <p>DNAの4つの塩基（A・T・G・C）が3つ並んだものが「コドン」で、ひとつのアミノ酸を指定します。コドンを選ぶと、基板のLEDと3Dの二重らせんが同じ色で光り、そのアミノ酸の性質もわかります。</p>
+        <ol class="steps">
+          <li><b>1</b>コドンを選ぶ</li>
+          <li><b>2</b>1文字だけ変えてみる</li>
+          <li><b>3</b>USBで基板へ送る</li>
+        </ol>
+      </div>
+    </div>
   </section>
 
-  <div class="panels">
-    <section class="panel" id="codonPanel">
-      <h2>コドン枠</h2>
-      <p class="hint">基板の4か所（3塩基対 = 6個ずつ）に表示するコドン。鎖A（5′→3′）の配列を指定します。</p>
-      <div id="slots" class="slots"></div>
-      <label class="check"><input type="checkbox" id="complement" checked> 相補鎖（鎖B）も点灯する</label>
-    </section>
-
-    <section class="panel" id="textPanel">
-      <h2>文字 → コドン</h2>
-      <div class="row">
-        <input id="textInput" type="text" placeholder="例: MASK  /  DNA" autocomplete="off" spellcheck="false" aria-label="変換する文字列">
-        <select id="textMode" aria-label="変換方式">
-          <option value="amino">アミノ酸1文字（標準遺伝暗号）</option>
-          <option value="ascii6">6bit ASCII（全文字対応）</option>
-        </select>
+  <main class="bench">
+    <section class="stage" aria-label="基板と3Dモデル">
+      <div class="stage-head">
+        <h2>基板と二重らせん</h2>
+        <span class="tag">12 base pairs · 24 LEDs</span>
       </div>
-      <div id="chips" class="chips" aria-live="polite"></div>
-      <div class="row">
-        <button id="btnApplyText" class="primary">基板に表示</button>
-        <span id="textInfo" class="hint"></span>
-      </div>
-    </section>
-
-    <section class="panel" id="paintPanel">
-      <h2>ペイント</h2>
-      <div class="row wrap">
-        <div class="seg" id="brushes" role="radiogroup" aria-label="筆"></div>
-        <input type="color" id="customColor" value="#ff00ff" aria-label="任意色">
-      </div>
-      <div class="row wrap">
-        <span class="lbl">単位</span>
-        <div class="seg" id="units" role="radiogroup" aria-label="単位">
-          <button data-unit="led">LED</button>
-          <button data-unit="pair">塩基対</button>
-          <button data-unit="codon">コドン</button>
+      <div class="stage-body">
+        <div class="boardwrap"><svg id="board" role="img" aria-label="DNA基板のLED配置。LEDをクリックすると色を塗れます"></svg></div>
+        <div class="helixwrap">
+          <canvas id="helix" aria-label="3Dの二重らせんモデル。ドラッグで回転、ホイールで拡大"></canvas>
+          <span class="hlabel" id="lbA5">5′</span><span class="hlabel" id="lbA3">3′</span>
+          <span class="hlabel b" id="lbB5">5′</span><span class="hlabel b" id="lbB3">3′</span>
+          <div id="helixFallback" class="helix-fallback" role="status">3Dモデルを読み込み中…</div>
+          <div id="tip" class="tip" hidden></div>
         </div>
       </div>
-      <details class="palette">
-        <summary>塩基の色</summary>
-        <div class="row wrap" id="paletteRow"></div>
-      </details>
+      <div class="stage-foot">
+        <label><input type="checkbox" id="fxPreview"> エフェクトをプレビュー</label>
+        <label><input type="checkbox" id="autoRotate" checked> 自動で回す</label>
+        <label>色 <select id="colorMode"><option value="led">LEDの色</option><option value="cpk">元素の色</option></select></label>
+      </div>
+      <p class="stage-note">黄が鎖A、水色が鎖B。ドラッグで回転、ホイールで拡大、ダブルクリックで元の位置に戻ります。塩基対をクリックすると、基板の同じ位置のLEDが選ばれます。</p>
     </section>
 
-    <section class="panel" id="framePanel">
-      <h2>フレーム <span id="frameCount" class="count"></span></h2>
-      <div id="frameStrip" class="strip"></div>
-      <div class="row wrap">
-        <button id="btnFrameAdd">追加</button>
-        <button id="btnFrameDup">複製</button>
-        <button id="btnFrameDel">削除</button>
-        <button id="btnFrameLeft" aria-label="左へ">◀</button>
-        <button id="btnFrameRight" aria-label="右へ">▶</button>
-        <button id="btnClearFrame">現在のフレームを消灯</button>
-        <button id="btnDefault">初期配列に戻す</button>
+    <div class="work">
+      <div class="tabs" role="tablist" aria-label="操作">
+        <button class="tab" role="tab" id="tab-codon" aria-controls="p-codon" aria-selected="true"><small>01</small>コドン</button>
+        <button class="tab" role="tab" id="tab-text" aria-controls="p-text" aria-selected="false"><small>02</small>文字</button>
+        <button class="tab" role="tab" id="tab-paint" aria-controls="p-paint" aria-selected="false"><small>03</small>個別・フレーム</button>
+        <button class="tab" role="tab" id="tab-device" aria-controls="p-device" aria-selected="false"><small>04</small>機器</button>
       </div>
-      <label class="slider">切替間隔 <output id="holdOut"></output>
-        <input type="range" id="hold" min="200" max="5000" step="100">
-      </label>
-    </section>
 
-    <section class="panel" id="outPanel">
-      <h2>出力・機器</h2>
-      <label class="slider">明るさ <output id="briOut"></output>
-        <input type="range" id="bri" min="0" max="128" step="1">
-      </label>
-      <div class="row wrap">
-        <label class="inline">エフェクト
-          <select id="fx">
-            <option value="0">固定</option>
-            <option value="1">成長（対ごとに増える）</option>
-            <option value="2">呼吸</option>
-            <option value="3">波（らせんに沿う）</option>
-            <option value="4">コドン走査</option>
-          </select>
-        </label>
-        <label class="slider grow">速さ <output id="speedOut"></output>
-          <input type="range" id="speed" min="1" max="10" step="1">
-        </label>
-      </div>
-      <label class="check"><input type="checkbox" id="autoSend" checked> 編集するたびに自動送信</label>
-      <div class="row wrap">
-        <button id="btnSend" class="primary">送信</button>
-        <button id="btnSave">保存（フラッシュ）</button>
-        <button id="btnRead">読み戻し</button>
-        <button id="btnTest">動作テスト</button>
-      </div>
-      <div class="row wrap">
-        <button id="btnExport">JSON書き出し</button>
-        <button id="btnImport">JSON読込</button>
-        <input type="file" id="fileImport" accept="application/json,.json" hidden>
-      </div>
-    </section>
+      <!-- 01 コドン -->
+      <div class="tabpanel" id="p-codon" role="tabpanel" aria-labelledby="tab-codon">
+        <section class="card">
+          <h2>コドン枠 <em>codons</em></h2>
+          <p class="lead">基板の4か所（3塩基対 = 6個ずつ）に表示するコドン。枠を選ぶと、下にそのコドンの中身が出ます。</p>
+          <div id="slots" class="slots"></div>
+          <label class="check"><input type="checkbox" id="complement" checked> 相補鎖（鎖B）も点灯する</label>
+        </section>
 
-    <section class="panel" id="logPanel">
-      <h2>ログ</h2>
-      <pre id="log" class="log" aria-live="polite"></pre>
-    </section>
-  </div>
-</main>
+        <section class="card" id="inspector" aria-live="polite">
+          <h2><span id="inspTitle">選んだコドン</span> <em>inspector</em></h2>
+          <div class="insp" id="insp"></div>
+        </section>
 
-<script src="board-data.js"></script>
-<script src="codons.js"></script>
-<script src="app.js"></script>
+        <section class="card">
+          <h2>コドン表 <em>genetic code</em></h2>
+          <p class="lead">64通りのコドンと、指定されるアミノ酸の一覧。クリックすると、選んでいる枠のコドンが変わります。内側から1番目・2番目・3番目の塩基、外側がアミノ酸です。</p>
+          <div class="wheelbox"><svg id="wheel" role="group" aria-label="遺伝暗号の円形表"></svg></div>
+          <div class="legend" id="legend"></div>
+          <p class="wheelhelp">桃色の枠が「同じアミノ酸になる仲間」、黒い枠が4つの枠のコドンです。</p>
+        </section>
+
+        <section class="card">
+          <h2>4つの塩基 <em>bases</em></h2>
+          <p class="lead">DNAの文字は A・T・G・C の4種類。大きさの違う2つのグループがあり、決まった相手とだけ水素結合でつながります。</p>
+          <div class="guide" id="guide"></div>
+        </section>
+      </div>
+
+      <!-- 02 文字 -->
+      <div class="tabpanel" id="p-text" role="tabpanel" aria-labelledby="tab-text" hidden>
+        <section class="card">
+          <h2>文字をコドンに <em>text → codon</em></h2>
+          <p class="lead">入力した文字を、1文字につき1つのコドンに置きかえます。4文字ごとに1フレームになり、切り替えて表示されます。</p>
+          <div class="row">
+            <input id="textInput" type="text" placeholder="例: MASK / DNA" autocomplete="off" spellcheck="false" aria-label="変換する文字列">
+            <select id="textMode" aria-label="変換方式">
+              <option value="amino">アミノ酸1文字（標準遺伝暗号）</option>
+              <option value="ascii6">6bit ASCII（全文字対応）</option>
+            </select>
+          </div>
+          <div id="chips" class="chips"></div>
+          <div class="row">
+            <button id="btnApplyText" class="btn btn-primary" type="button">基板に表示</button>
+            <span id="textInfo" class="lbl"></span>
+          </div>
+          <p class="lead" style="margin-top:10px">「アミノ酸1文字」は M→ATG のように、アルファベット1文字が表すアミノ酸のコドンを使います（B・J・O・U・X・Z は対応なし）。「6bit ASCII」は、空白から「_」までの64文字を、塩基3つ（2ビット×3）に1対1で割り当てます。</p>
+        </section>
+
+        <section class="card">
+          <h2>翻訳してみる <em>translation</em></h2>
+          <p class="lead">4つの枠を5′から順に読み、アミノ酸をつなげていきます。読んでいるコドンは基板と3Dモデルでも光ります。終止コドンで止まります。</p>
+          <div class="row"><button id="btnTranslate" class="btn btn-ghost" type="button">読み取りを始める</button><span id="trInfo" class="lbl"></span></div>
+          <div class="rib" id="rib"></div>
+          <div class="peptide" id="peptide" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- 03 個別・フレーム -->
+      <div class="tabpanel" id="p-paint" role="tabpanel" aria-labelledby="tab-paint" hidden>
+        <section class="card">
+          <h2>ペイント <em>paint</em></h2>
+          <p class="lead">基板のLEDをクリックして、1個ずつ・1塩基対ずつ・コドンごとに色を塗れます。</p>
+          <div class="row"><div class="seg" id="brushes" role="radiogroup" aria-label="筆"></div><input type="color" id="customColor" value="#ff00ff" aria-label="任意色"></div>
+          <div class="row"><span class="lbl">単位</span>
+            <div class="seg" id="units" role="radiogroup" aria-label="単位">
+              <button type="button" data-unit="led">LED</button><button type="button" data-unit="pair">塩基対</button><button type="button" data-unit="codon">コドン</button>
+            </div></div>
+          <details><summary>塩基ごとのLEDの色</summary><div class="palette-row row" id="paletteRow"></div></details>
+        </section>
+        <section class="card">
+          <h2>フレーム <em id="frameCount"></em></h2>
+          <div id="frameStrip" class="strip"></div>
+          <div class="row">
+            <button id="btnFrameAdd" class="small" type="button">追加</button>
+            <button id="btnFrameDup" class="small" type="button">複製</button>
+            <button id="btnFrameDel" class="small" type="button">削除</button>
+            <button id="btnFrameLeft" class="small" type="button" aria-label="左へ">◀</button>
+            <button id="btnFrameRight" class="small" type="button" aria-label="右へ">▶</button>
+            <button id="btnClearFrame" class="small" type="button">現在のフレームを消灯</button>
+            <button id="btnDefault" class="small" type="button">初期配列に戻す</button>
+          </div>
+          <label class="slider">切替間隔 <output id="holdOut"></output><input type="range" id="hold" min="200" max="5000" step="100"></label>
+        </section>
+      </div>
+
+      <!-- 04 機器 -->
+      <div class="tabpanel" id="p-device" role="tabpanel" aria-labelledby="tab-device" hidden>
+        <section class="card">
+          <h2>出力 <em>output</em></h2>
+          <label class="slider">明るさ <output id="briOut"></output><input type="range" id="bri" min="0" max="128" step="1"></label>
+          <div class="row">
+            <label class="row" style="margin:0">エフェクト
+              <select id="fx"><option value="0">固定</option><option value="1">成長（対ごとに増える）</option><option value="2">呼吸</option><option value="3">波（らせんに沿う）</option><option value="4">コドン走査</option></select>
+            </label>
+          </div>
+          <label class="slider">速さ <output id="speedOut"></output><input type="range" id="speed" min="1" max="10" step="1"></label>
+          <label class="check"><input type="checkbox" id="autoSend" checked> 編集するたびに自動で送る</label>
+          <div class="row">
+            <button id="btnSend" class="btn btn-primary" type="button">送信</button>
+            <button id="btnSave" class="btn btn-ghost" type="button">保存（フラッシュ）</button>
+            <button id="btnRead" class="btn btn-ghost" type="button">読み戻し</button>
+            <button id="btnTest" class="btn btn-soft" type="button">動作テスト</button>
+          </div>
+          <p class="lead">「保存」すると、USBを抜き差ししても同じ表示が復元されます。LEDはUSB給電のときだけ点灯します。</p>
+        </section>
+        <section class="card">
+          <h2>ファイル <em>file</em></h2>
+          <div class="row">
+            <button id="btnExport" class="small" type="button">JSON書き出し</button>
+            <button id="btnImport" class="small" type="button">JSON読込</button>
+            <input type="file" id="fileImport" accept="application/json,.json" hidden>
+          </div>
+        </section>
+        <section class="card">
+          <h2>ログ <em>log</em></h2>
+          <pre id="log" class="log" aria-live="polite"></pre>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    遺伝暗号は標準遺伝暗号（NCBI translation table 1）。DNAの文字表記なので、mRNAのU（ウラシル）はTと書いています。二重らせんの3Dモデルはおおよそ B型DNA（1回転10.5塩基対、塩基対の間隔 0.34 nm）にそろえた模式図で、原子位置は実測の構造ではありません。<br>
+    <a href="https://accel-kitchen.com/">加速キッチン</a> ／ <a href="https://github.com/accel-kitchen/dna-accessory-console">GitHub</a>
+  </footer>
+</div>
+
+<script src="board-data.js?v=1"></script>
+<script src="codons.js?v=1"></script>
+<script src="aminoacids.js?v=1"></script>
+<script src="molecules.js?v=1"></script>
+<script src="wheel.js?v=1"></script>
+<script src="app.js?v=1"></script>
+<script type="module" src="helix.js?v=1"></script>
 </body>
 </html>

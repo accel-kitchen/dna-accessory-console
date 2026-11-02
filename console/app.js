@@ -1,8 +1,10 @@
-// DNA LED Console: board preview, codon / text editing, Web Serial transport.
+// DNA LED Console: board preview, codon learning panels, 3D model hook, Web Serial transport.
 (function () {
   "use strict";
   const B = window.BOARD;
   const C = window.CODONS;
+  const AM = window.AMINO;
+  const MOL = window.MOL;
   const N_LEDS = 24, N_PAIRS = 12, N_CODONS = 4, MAX_FRAMES = 16;
   const NS = "http://www.w3.org/2000/svg";
   const $ = (id) => document.getElementById(id);
@@ -39,9 +41,11 @@
     brush: "A", unit: "pair", customColor: "#ff00ff",
     autoSend: true,
     maxBri: 128,
-    previewFx: false,
+    previewFx: false, autoRotate: true, colorMode: "led",
+    sel: 0, selPos: 2,
   };
-  const PERSIST_KEYS = ["frames", "cur", "hold", "bri", "fx", "speed", "palette", "complement", "text", "textMode", "textChoices", "brush", "unit", "customColor", "autoSend", "previewFx"];
+  const PERSIST_KEYS = ["frames", "cur", "hold", "bri", "fx", "speed", "palette", "complement", "text", "textMode", "textChoices", "brush", "unit", "customColor", "autoSend", "previewFx", "autoRotate", "colorMode", "sel", "selPos"];
+  const V = { tab: "codon", hoverPair: -1, hoverCodon: null, trace: -1 };   // view-only state
 
   function loadSaved() {
     try {
@@ -73,6 +77,8 @@
     S.fx = num(o.fx, 0, 4, S.fx);
     S.speed = num(o.speed, 1, 10, S.speed);
     S.cur = num(o.cur, 0, S.frames.length - 1, 0);
+    S.sel = num(o.sel, 0, N_CODONS - 1, S.sel);
+    S.selPos = num(o.selPos, 0, 2, S.selPos);
     if (o.palette && ["A", "T", "G", "C"].every((k) => /^#[0-9a-fA-F]{6}$/.test(o.palette[k]))) S.palette = Object.assign({}, o.palette);
     if (typeof o.complement === "boolean") S.complement = o.complement;
     if (typeof o.text === "string") S.text = o.text;
@@ -83,6 +89,8 @@
     if (/^#[0-9a-fA-F]{6}$/.test(o.customColor || "")) S.customColor = o.customColor;
     if (typeof o.autoSend === "boolean") S.autoSend = o.autoSend;
     if (typeof o.previewFx === "boolean") S.previewFx = o.previewFx;
+    if (typeof o.autoRotate === "boolean") S.autoRotate = o.autoRotate;
+    if (o.colorMode === "led" || o.colorMode === "cpk") S.colorMode = o.colorMode;
   }
 
   const frame = () => S.frames[S.cur];
@@ -105,6 +113,32 @@
     }
     return rgbToHex(rgb);
   }
+
+  // The LED colour stays the single source of truth; the reading colour on paper is the same hue, toned down.
+  function hueOf(hex) {
+    const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (!d) return [0, 0];
+    let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [(h * 60 + 360) % 360, d / (1 - Math.abs(mx + mn - 1))];
+  }
+  function applyUiColours() {
+    ["A", "T", "G", "C"].forEach((k) => {
+      const [h, s] = hueOf(S.palette[k]);
+      const sat = s < 0.15 ? 0 : 56;
+      document.documentElement.style.setProperty("--b-" + k, `hsl(${h.toFixed(0)} ${sat}% 44%)`);
+      document.documentElement.style.setProperty("--b-" + k + "-pale", `hsl(${h.toFixed(0)} ${Math.round(sat * 0.9)}% 93%)`);
+    });
+  }
+  const uiBaseHex = (k) => {
+    const cs = getComputedStyle(document.documentElement).getPropertyValue("--b-" + k).trim();
+    const m = /hsl\((\d+)\s+(\d+)%\s+(\d+)%\)/.exec(cs);
+    if (!m) return "#888888";
+    const h = +m[1], s = +m[2] / 100, l = +m[3] / 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n) => { const kk = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(kk - 3, 9 - kk, 1)); };
+    return rgbToHex([f(0), f(8), f(4)].map((v) => Math.round(v * 255)));
+  };
 
   // ---- effect simulation (mirrors render() in dna_console.ino) ---------------------------------
   function simScales(fx, speed, now) {
@@ -131,95 +165,7 @@
     return s;
   }
 
-  // ---- board preview -------------------------------------------------------------------------
-  const svg = $("board");
-  const ledEls = [];
-  const codonLabels = [];
-  function el(name, attrs, parent) {
-    const e = document.createElementNS(NS, name);
-    for (const k in attrs) e.setAttribute(k, attrs[k]);
-    if (parent) parent.appendChild(e);
-    return e;
-  }
-  function buildBoard() {
-    svg.setAttribute("viewBox", "60 24 80 126");
-    const defs = el("defs", {}, svg);
-    const f = el("filter", { id: "blur", x: "-100%", y: "-100%", width: "300%", height: "300%" }, defs);
-    el("feGaussianBlur", { stdDeviation: "1.6" }, f);
-    el("path", { d: B.outer, class: "outline", "fill-rule": "evenodd" }, svg);
-    B.holes.forEach((d) => el("path", { d, class: "hole" }, svg));
-
-    for (let k = 0; k < N_PAIRS; k++) {
-      const a = B.leds[2 * k], b = B.leds[2 * k + 1];
-      el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: "link" }, svg);
-      const t = el("text", { x: 78, y: a.y + 0.9, class: "pairNo" }, svg);
-      t.textContent = k + 1;
-    }
-    // codon brackets and labels on the right
-    for (let c = 0; c < N_CODONS; c++) {
-      const y0 = B.leds[6 * c].y - 4, y1 = B.leds[6 * c + 5].y + 4;
-      el("path", { d: `M120 ${y0} h1.5 V${y1} h-1.5`, class: "brk" }, svg);
-      const cy = (y0 + y1) / 2;
-      const t1 = el("text", { x: 124, y: cy - 0.5, class: "cod" }, svg);
-      const t2 = el("text", { x: 124, y: cy + 3.2, class: "cod2" }, svg);
-      const t0 = el("text", { x: 124, y: cy - 4.2, class: "cod2" }, svg);
-      t0.textContent = `コドン${c + 1}`;
-      codonLabels.push([t1, t2]);
-    }
-    const sa = el("text", { x: 105, y: 33.5, class: "strandLbl" }, svg); sa.textContent = "";
-    B.leds.forEach((l, i) => {
-      const halo = el("circle", { cx: l.x, cy: l.y, r: 3.6, filter: "url(#blur)", class: "halo", opacity: 0 }, svg);
-      const c = el("circle", { cx: l.x, cy: l.y, r: 3.1, class: "led", tabindex: 0, role: "button" }, svg);
-      const tt = el("title", {}, c);
-      tt.textContent = `${l.ref} / 鎖${l.strand} / 塩基対${l.pair + 1} / コドン${l.codon + 1}`;
-      c.addEventListener("click", () => paintLed(i));
-      c.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); paintLed(i); } });
-      const lt = el("text", { x: l.x, y: l.y + 0.2, class: "ltr" }, svg);
-      ledEls.push({ halo, c, lt });
-    });
-  }
-
-  function updateBoard(now) {
-    let f = frame();
-    let scales = null;
-    if (S.previewFx) {
-      if (S.frames.length > 1) f = S.frames[Math.floor(now / S.hold) % S.frames.length];
-      scales = simScales(S.fx, S.speed, now);
-    }
-    for (let i = 0; i < N_LEDS; i++) {
-      const rgb = cellRgb(f[i]);
-      const k = scales ? scales[i] / 255 : 1;
-      const lit = rgb[0] + rgb[1] + rgb[2] > 0 && k > 0.02;
-      const col = lit ? `rgb(${Math.round(rgb[0] * k)},${Math.round(rgb[1] * k)},${Math.round(rgb[2] * k)})` : "#161d2c";
-      ledEls[i].c.setAttribute("fill", col);
-      ledEls[i].halo.setAttribute("fill", col);
-      ledEls[i].halo.setAttribute("opacity", lit ? 0.55 * k : 0);
-    }
-  }
-  function loop(now) { updateBoard(now); requestAnimationFrame(loop); }
-
-  // ---- editing -------------------------------------------------------------------------------
-  function setPair(f, k, strandBase, clickedStrand, keepOther) {
-    // strandBase: base letter / "-" / "#hex" for the clicked LED; the other LED gets the complement if applicable.
-    const me = 2 * k + clickedStrand, other = 2 * k + (1 - clickedStrand);
-    f[me] = strandBase;
-    if (/^[ATGC]$/.test(strandBase)) { if (S.complement) f[other] = C.complement(strandBase); }
-    else if (!keepOther) f[other] = strandBase;
-  }
-  function paintLed(i) {
-    const f = frame();
-    const brushVal = S.brush === "off" ? "-" : S.brush === "color" ? S.customColor : S.brush;
-    const k = i >> 1, strand = i & 1, c = Math.floor(k / 3);
-    if (S.unit === "led") {
-      f[i] = brushVal;
-    } else if (S.unit === "pair") {
-      setPair(f, k, brushVal, strand, false);
-    } else {
-      for (let q = 3 * c; q < 3 * c + 3; q++) setPair(f, q, brushVal, strand, false);
-    }
-    changed();
-  }
-
+  // ---- helpers on codons -----------------------------------------------------------------------
   function slotCodon(f, c) {
     let s = "";
     for (let j = 0; j < 3; j++) {
@@ -229,6 +175,7 @@
     }
     return s;
   }
+  function slotCodons(f) { return [0, 1, 2, 3].map((c) => slotCodon(f, c)); }
   function setSlot(c, codon) {
     const f = frame();
     for (let j = 0; j < 3; j++) {
@@ -238,72 +185,344 @@
     }
     changed();
   }
+  const aaName = (aa) => (aa === "*" ? "終止コドン" : AM.AA[aa].ja);
+  const el = (name, attrs, parent) => {
+    const e = document.createElementNS(NS, name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
 
-  // ---- codon slots UI ------------------------------------------------------------------------
+  // ---- board preview -------------------------------------------------------------------------
+  const svg = $("board");
+  const ledEls = [], pairHi = [], codLabels = [], codSel = [];
+  function buildBoard() {
+    svg.setAttribute("viewBox", "70 24 70 126");
+    const defs = el("defs", {}, svg);
+    const f = el("filter", { id: "blur", x: "-100%", y: "-100%", width: "300%", height: "300%" }, defs);
+    el("feGaussianBlur", { stdDeviation: "1.6" }, f);
+    el("path", { d: B.outer, class: "pcb", "fill-rule": "evenodd" }, svg);
+    B.holes.forEach((d) => el("path", { d, class: "hole" }, svg));
+    for (let c = 0; c < N_CODONS; c++) {
+      const y0 = B.leds[6 * c].y - 4, y1 = B.leds[6 * c + 5].y + 4;
+      codSel.push(el("rect", { x: 87, y: y0 + 0.6, width: 26, height: y1 - y0 - 1.2, rx: 3, class: "codsel", opacity: 0 }, svg));
+    }
+    for (let k = 0; k < N_PAIRS; k++) {
+      const a = B.leds[2 * k], b = B.leds[2 * k + 1];
+      pairHi.push(el("rect", { x: 88, y: a.y - 4.2, width: 24, height: 8.4, rx: 4.2, class: "pairhi", opacity: 0 }, svg));
+      el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: "trace" }, svg);
+      const t = el("text", { x: 80, y: a.y + 0.9, class: "pairNo" }, svg);
+      t.textContent = k + 1;
+    }
+    for (let c = 0; c < N_CODONS; c++) {
+      const y0 = B.leds[6 * c].y - 4, y1 = B.leds[6 * c + 5].y + 4;
+      el("path", { d: `M120 ${y0} h1.5 V${y1} h-1.5`, class: "brk" }, svg);
+      const cy = (y0 + y1) / 2;
+      const t0 = el("text", { x: 124, y: cy - 4.2, class: "cod2" }, svg);
+      t0.textContent = `コドン${c + 1}`;
+      const t1 = el("text", { x: 124, y: cy - 0.5, class: "cod" }, svg);
+      const t2 = el("text", { x: 124, y: cy + 3.2, class: "cod2" }, svg);
+      const hit = el("rect", { x: 118, y: y0, width: 22, height: y1 - y0, fill: "transparent", style: "cursor:pointer" }, svg);
+      hit.addEventListener("click", () => selectSlot(c));
+      codLabels.push([t1, t2]);
+    }
+    B.leds.forEach((l, i) => {
+      const halo = el("circle", { cx: l.x, cy: l.y, r: 3.7, filter: "url(#blur)", class: "halo", opacity: 0 }, svg);
+      const c = el("circle", { cx: l.x, cy: l.y, r: 3.1, class: "led", tabindex: 0, role: "button" }, svg);
+      const tt = el("title", {}, c);
+      tt.textContent = `${l.ref} / 鎖${l.strand} / 塩基対${l.pair + 1} / コドン${l.codon + 1}`;
+      c.addEventListener("click", () => onLedClick(i));
+      c.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onLedClick(i); } });
+      c.addEventListener("mouseenter", () => { V.hoverPair = l.pair; helixHover(l.pair); });
+      c.addEventListener("mouseleave", () => { V.hoverPair = -1; helixHover(-1); });
+      ledEls.push({ halo, c });
+    });
+  }
+
+  function currentFrameForView(now) {
+    let f = frame();
+    let scales = null;
+    if (S.previewFx) {
+      if (S.frames.length > 1) f = S.frames[Math.floor(now / S.hold) % S.frames.length];
+      scales = simScales(S.fx, S.speed, now);
+    }
+    return { f, scales };
+  }
+  function updateBoard(now) {
+    const { f, scales } = currentFrameForView(now);
+    for (let i = 0; i < N_LEDS; i++) {
+      const rgb = cellRgb(f[i]);
+      const k = scales ? scales[i] / 255 : 1;
+      const lit = rgb[0] + rgb[1] + rgb[2] > 0 && k > 0.02;
+      const col = lit ? `rgb(${Math.round(rgb[0] * k)},${Math.round(rgb[1] * k)},${Math.round(rgb[2] * k)})` : "#0E1126";
+      ledEls[i].c.setAttribute("fill", col);
+      ledEls[i].halo.setAttribute("fill", col);
+      ledEls[i].halo.setAttribute("opacity", lit ? 0.6 * k : 0);
+    }
+    for (let k = 0; k < N_PAIRS; k++) pairHi[k].setAttribute("opacity", k === V.hoverPair ? 1 : 0);
+  }
+  let lastHelixPush = 0;
+  function loop(now) {
+    updateBoard(now);
+    if (S.previewFx && now - lastHelixPush > 60) { lastHelixPush = now; pushHelix(now); }
+    requestAnimationFrame(loop);
+  }
+
+  // ---- 3D model hook ---------------------------------------------------------------------------
+  function helixHover(k) { if (window.Helix && window.Helix.ready && window.Helix.setHover) window.Helix.setHover(k); }
+  function focusedCodon() { return V.trace >= 0 ? V.trace : (V.tab === "codon" ? S.sel : -1); }
+  function pushHelix(now) {
+    const H = window.Helix;
+    if (!H || !H.ready) return;
+    const { f, scales } = currentFrameForView(now || 0);
+    const kinds = [], a = [], b = [];
+    for (let k = 0; k < N_PAIRS; k++) {
+      const ca = f[2 * k], cb = f[2 * k + 1];
+      const letter = /^[ATGC]$/.test(ca) ? ca : /^[ATGC]$/.test(cb) ? C.complement(cb) : B.defaultSeq[k];
+      kinds.push(letter);
+      const mk = (cell, kind, idx) => {
+        const rgb = cellRgb(cell), s = scales ? scales[idx] / 255 : 1;
+        return { rgb: rgb.map((v) => v * s), lit: rgb[0] + rgb[1] + rgb[2] > 0 && s > 0.05, ident: uiBaseHex(kind) };
+      };
+      a.push(mk(ca, letter, 2 * k));
+      b.push(mk(cb, C.complement(letter), 2 * k + 1));
+    }
+    const fc = focusedCodon();
+    H.setState({ kinds, a, b, focus: fc >= 0 ? [3 * fc, 3 * fc + 1, 3 * fc + 2] : [] });
+  }
+  function bindHelix() {
+    const H = window.Helix;
+    const fb = $("helixFallback");
+    const tip = $("tip");
+    const ok = H && H.init({
+      canvas: $("helix"),
+      labels: { a5: $("lbA5"), a3: $("lbA3"), b5: $("lbB5"), b3: $("lbB3") },
+      onHover(h, ev) {
+        if (!h) { tip.hidden = true; V.hoverPair = -1; return; }
+        V.hoverPair = h.pair;
+        showTip(h, ev);
+      },
+      onMove(h, ev) { showTip(h, ev); },
+      onClick(h) {
+        if (V.tab === "paint") paintLed(2 * h.pair + h.strand);
+        else { S.selPos = h.pair % 3; selectSlot(Math.floor(h.pair / 3)); }
+      },
+    });
+    if (!ok) { fb.hidden = false; fb.textContent = "3Dモデルを表示できません（WebGLが使えないか、three.js を読み込めませんでした）。基板プレビューと各種機能は使えます。"; $("helix").style.display = "none"; return; }
+    fb.hidden = true;
+    H.setAutoRotate(S.autoRotate); H.setColorMode(S.colorMode);
+    pushHelix();
+  }
+  function showTip(h, ev) {
+    const tip = $("tip"), f = frame();
+    const k = h.pair, cell = f[2 * k + h.strand];
+    const base = /^[ATGC]$/.test(cell) ? cell : "—";
+    const r = $("helix").parentElement.getBoundingClientRect();
+    const cod = slotCodon(f, Math.floor(k / 3));
+    tip.hidden = false;
+    tip.innerHTML = `<b>鎖${h.strand ? "B" : "A"} · 塩基対 ${k + 1}</b> · ${base}<br>コドン${Math.floor(k / 3) + 1}${cod ? "：" + cod : ""}`;
+    tip.style.left = (ev.clientX - r.left) + "px";
+    tip.style.top = (ev.clientY - r.top) + "px";
+  }
+  function whenHelix(fn) {
+    if (window.Helix) fn(); else window.addEventListener("helix-module", fn, { once: true });
+  }
+
+  // ---- selection / board click -----------------------------------------------------------------
+  function onLedClick(i) {
+    if (V.tab === "paint") { paintLed(i); return; }
+    const k = i >> 1;
+    S.selPos = k % 3;
+    selectSlot(Math.floor(k / 3));
+  }
+  function selectSlot(c) {
+    S.sel = c;
+    renderAll(true);
+    persist();
+    const H = window.Helix;
+    if (H && H.ready) H.focusPair(3 * c + 1);
+  }
+
+  // ---- painting --------------------------------------------------------------------------------
+  function setPair(f, k, strandBase, clickedStrand) {
+    const me = 2 * k + clickedStrand, other = 2 * k + (1 - clickedStrand);
+    f[me] = strandBase;
+    if (/^[ATGC]$/.test(strandBase)) { if (S.complement) f[other] = C.complement(strandBase); }
+    else f[other] = strandBase;
+  }
+  function paintLed(i) {
+    const f = frame();
+    const brushVal = S.brush === "off" ? "-" : S.brush === "color" ? S.customColor : S.brush;
+    const k = i >> 1, strand = i & 1, c = Math.floor(k / 3);
+    if (S.unit === "led") f[i] = brushVal;
+    else if (S.unit === "pair") setPair(f, k, brushVal, strand);
+    else for (let q = 3 * c; q < 3 * c + 3; q++) setPair(f, q, brushVal, strand);
+    changed();
+  }
+
+  // ---- codon slots -----------------------------------------------------------------------------
   const slotEls = [];
   function buildSlots() {
     const wrap = $("slots");
-    const codonsSorted = C.allCodons().sort((a, b) => {
-      const x = C.aaOf(a), y = C.aaOf(b);
-      return x === y ? a.localeCompare(b) : (x === "*" ? "~" : x).localeCompare(y === "*" ? "~" : y);
-    });
     for (let c = 0; c < N_CODONS; c++) {
       const d = document.createElement("div");
       d.className = "slot";
-      d.innerHTML = `<h3>コドン${c + 1}（対${3 * c + 1}–${3 * c + 3}）</h3>
-        <div class="bases"><i></i><i></i><i></i></div>
-        <input type="text" maxlength="3" inputmode="text" autocomplete="off" spellcheck="false" aria-label="コドン${c + 1}の塩基3文字">
-        <select aria-label="コドン${c + 1}を一覧から選ぶ"></select>
-        <p class="meta"></p>
-        <button type="button">消灯</button>`;
+      d.setAttribute("role", "button");
+      d.tabIndex = 0;
+      d.innerHTML = `<span class="n">${c + 1}</span><div class="tiles"></div><div class="aa"></div>
+        <input type="text" maxlength="3" autocomplete="off" spellcheck="false" aria-label="コドン${c + 1}の塩基3文字">`;
       const input = d.querySelector("input");
-      const sel = d.querySelector("select");
-      sel.innerHTML = '<option value="">一覧から選ぶ…</option>' + codonsSorted.map((k) => {
-        const aa = C.aaOf(k);
-        return `<option value="${k}">${k} · ${aa === "*" ? "終止" : aa + " " + C.AA_NAMES[aa]}</option>`;
-      }).join("");
+      d.addEventListener("click", (e) => { if (e.target === input) return; selectSlot(c); });
+      d.addEventListener("keydown", (e) => { if (e.target === d && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); selectSlot(c); } });
+      input.addEventListener("focus", () => { if (S.sel !== c) selectSlot(c); });
       input.addEventListener("input", () => {
         const norm = C.normalizeCodon(input.value);
-        input.classList.toggle("bad", input.value.length > 0 && !norm && input.value.length >= 3);
-        if (norm) setSlot(c, norm);
+        input.classList.toggle("bad", input.value.length >= 3 && !norm);
+        if (norm) { S.sel = c; setSlot(c, norm); }
       });
       input.addEventListener("blur", () => { input.classList.remove("bad"); renderSlots(); });
-      sel.addEventListener("change", () => { if (sel.value) setSlot(c, sel.value); sel.value = ""; });
-      d.querySelector("button").addEventListener("click", () => setSlot(c, null));
       wrap.appendChild(d);
-      slotEls.push({ d, input, meta: d.querySelector(".meta"), bars: d.querySelectorAll(".bases i") });
+      slotEls.push({ d, input, tiles: d.querySelector(".tiles"), aa: d.querySelector(".aa") });
     }
   }
   function renderSlots() {
     const f = frame();
     for (let c = 0; c < N_CODONS; c++) {
       const s = slotEls[c];
+      s.d.setAttribute("aria-pressed", String(c === S.sel));
       const codon = slotCodon(f, c);
       if (document.activeElement !== s.input) s.input.value = codon || "";
       s.input.placeholder = "---";
+      s.tiles.textContent = "";
       for (let j = 0; j < 3; j++) {
         const cell = f[2 * (3 * c + j)];
-        s.bars[j].style.background = cell === "-" ? "#26324a" : rgbToHex(cellRgb(cell));
+        const t = document.createElement("span");
+        t.className = "btile" + (c === S.sel && j === S.selPos ? " pos-sel" : "");
+        if (/^[ATGC]$/.test(cell)) { t.dataset.b = cell; t.textContent = cell; }
+        else { t.classList.add("off"); t.textContent = cell === "-" ? "·" : "◆"; if (cell[0] === "#") { t.style.background = cell; t.style.color = "#fff"; t.classList.remove("off"); } }
+        t.addEventListener("click", (e) => { e.stopPropagation(); S.selPos = j; selectSlot(c); });
+        s.tiles.appendChild(t);
       }
       if (codon) {
         const aa = C.aaOf(codon);
-        const comp = codon.split("").map(C.complement).join("");
-        s.meta.innerHTML = `<b>${aa === "*" ? "終止コドン" : aa + " · " + C.AA_NAMES[aa]}</b><br>相補 ${comp}`;
+        s.aa.innerHTML = `${aa === "*" ? "終止" : AM.AA[aa].ja}<small>${aa === "*" ? "Stop" : AM.AA[aa].three + " · " + aa}</small>`;
       } else {
         const any = [0, 1, 2].some((j) => f[2 * (3 * c + j)] !== "-" || f[2 * (3 * c + j) + 1] !== "-");
-        s.meta.textContent = any ? "個別に塗った色（コドンではありません）" : "消灯";
+        s.aa.innerHTML = any ? "個別の色<small>コドンではありません</small>" : "消灯<small>入力か表から選べます</small>";
       }
-      const lab = codonLabels[c];
+      const lab = codLabels[c];
       lab[0].textContent = codon || "—";
-      lab[1].textContent = codon ? (C.aaOf(codon) === "*" ? "Stop" : C.AA_NAMES[C.aaOf(codon)]) : "";
+      lab[1].textContent = codon ? (C.aaOf(codon) === "*" ? "Stop" : AM.AA[C.aaOf(codon)].ja) : "";
+      codSel[c].setAttribute("opacity", c === focusedCodon() ? 1 : 0);
     }
   }
 
-  // ---- text -> codons ------------------------------------------------------------------------
-  let converted = [];   // [{ch, codon, aa, kind, options, note}]
+  // ---- inspector (learning card for the selected codon) -----------------------------------------
+  const WATER_TEXT = {
+    avoid: "水が苦手。水の中では逃げるように、仲間どうしで集まります。",
+    swim: "水になじむ。水の中でもすいすい広がります。",
+    charge: "電荷があるので、水の分子に引き寄せられます。",
+    tiny: "とても小さいので、狭いところでも自由に動けます。",
+    stiff: "輪の形で曲がりにくい。らせんの途中で向きを変えます。",
+    bridge: "水になじみ、ふたり並ぶと S–S 結合でつながります。",
+    stop: "アミノ酸ではなく「ここで終わり」の合図です。",
+  };
+  const PAIR_NAME = { A: "アデニン", T: "チミン", G: "グアニン", C: "シトシン" };
+  const POS_NAME = ["1番目", "2番目", "3番目"];
+
+  function kindOfChange(from, to) {
+    if (from === to) return { cls: "silent", label: "同義（サイレント）" };
+    if (to === "*") return { cls: "stop", label: "ナンセンス（早期終止）" };
+    if (from === "*") return { cls: "miss", label: "終止が消える" };
+    return { cls: "miss", label: "ミスセンス" };
+  }
+
+  function renderInspector() {
+    const box = $("insp");
+    const f = frame();
+    const c = S.sel;
+    const codon = slotCodon(f, c);
+    $("inspTitle").textContent = `コドン${c + 1}`;
+    if (!codon) {
+      box.innerHTML = `<p class="lead">この枠は消灯中（または個別に塗った色）です。コドンを入れると、アミノ酸の性質や、1文字変えたときの変化がここに出ます。</p>
+        <div class="row"><button class="small" type="button" data-set="ATG">ATG（開始コドン）を入れる</button><button class="small" type="button" data-set="TAA">TAA（終止コドン）を入れる</button><button class="small" type="button" data-set="GCA">GCA を入れる</button></div>`;
+      box.querySelectorAll("[data-set]").forEach((b) => b.addEventListener("click", () => setSlot(c, b.dataset.set)));
+      return;
+    }
+    const aa = C.aaOf(codon), A = AM.AA[aa], cls = AM.CLASSES[A.cls];
+    const syn = C.AA_CODONS[aa];
+    const water = A.water || "swim";
+    const badge = (txt, col, bg) => `<span class="badge" style="color:${col};border-color:${col};background:${bg}">${txt}</span>`;
+    let html = `<div class="aa-head"><div class="aa-fig">${AM.mascot(aa, { size: 104 })}</div><div>
+      <div class="aa-name">${A.ja}<small>${A.en}${aa === "*" ? "" : " · " + A.three + " · " + aa}</small></div>
+      <div>${badge(cls.label, cls.stroke, cls.fill)}${A.start ? badge("開始コドン", "#3C6B4B", "#E5EFE7") : ""}${badge(`同義コドン ${syn.length}個`, "#6E6776", "#F2EBD9")}</div>
+      <div class="says">${A.says}</div></div></div>
+      <p class="fact"><b>メモ：</b>${A.fact}</p>`;
+    // water mini experiment + synonyms
+    html += `<div class="lab"><div><h3>水に入れてみると</h3><div class="water"><div class="wv"></div><div class="mfig ${water}">${AM.mascot(aa, { size: 80, tail: false })}</div></div>
+      <p class="labcap" style="margin-top:6px">${WATER_TEXT[water]}<br><span style="color:var(--ink-3)">${cls.note}。</span></p></div>
+      <div><h3>同じアミノ酸になる仲間</h3><div class="syn">${syn.map((k) => `<button class="chipc" type="button" data-set="${k}" aria-pressed="${k === codon}">${k}</button>`).join("")}</div>
+      <p class="labcap" style="margin-top:8px">${syn.length === 1 ? `<b>${codon}</b> だけが ${aaName(aa)} を指定します。1文字変わると、別のアミノ酸になります。` : `${syn.length}種類のコドンが同じ ${aaName(aa)} を指定します。これを「縮重」と呼びます。`}</p></div></div>`;
+    // the three bases with their partners
+    html += `<div><h3>3つの塩基と、相手の塩基</h3><div class="bases3">${[0, 1, 2].map((j) => {
+      const b = codon[j], p = C.complement(b), n = b === "A" || b === "T" ? 2 : 3;
+      return `<div class="bcard" role="button" tabindex="0" data-pos="${j}" aria-pressed="${j === S.selPos}"><span class="pos">${POS_NAME[j]}</span>${MOL.pairFigure(b, { colors: { A: "#3E9B5E", T: "#D2584A", G: "#4A6FC8", C: "#B97F10" } })}<div class="cap">${b}（${PAIR_NAME[b]}）— ${p}<small>水素結合 ${n} 本</small></div></div>`;
+    }).join("")}</div></div>`;
+    // mutation lab
+    const pos = S.selPos;
+    const alts = "ATGC".split("").filter((x) => x !== codon[pos]).map((x) => codon.slice(0, pos) + x + codon.slice(pos + 1));
+    const kinds = alts.map((a2) => kindOfChange(aa, C.aaOf(a2)));
+    const nSil = kinds.filter((k) => k.cls === "silent").length;
+    html += `<div><h3>${POS_NAME[pos]}の塩基を1文字変えると？</h3><div class="mut">${alts.map((a2, i) => {
+      const a2aa = C.aaOf(a2), k = kinds[i];
+      return `<button class="mtile" type="button" data-set="${a2}"><div class="cod">${a2.slice(0, pos)}<i>${a2[pos]}</i>${a2.slice(pos + 1)}</div>${AM.mascot(a2aa, { size: 58, tail: false })}<div class="nm">${aaName(a2aa)}</div><span class="kind ${k.cls}">${k.label}</span></button>`;
+    }).join("")}</div>
+      <p class="labcap" style="margin-top:8px">${pos === 2
+        ? `3番目の塩基は変わっても、同じアミノ酸になることが多い（ゆらぎ）。いまの3通りでは <b>${nSil}つ</b> が同義です。`
+        : `${POS_NAME[pos]}の塩基が変わると、アミノ酸も変わりやすい。いまの3通りでは <b>${nSil}つ</b> だけが同義です。`}
+      タイルを押すと、基板と3Dモデルにも反映されます。</p></div>`;
+    box.innerHTML = html;
+    box.querySelectorAll("[data-set]").forEach((b) => b.addEventListener("click", () => setSlot(c, b.dataset.set)));
+    box.querySelectorAll(".bcard").forEach((b) => {
+      const pick = () => { S.selPos = +b.dataset.pos; renderAll(true); persist(); };
+      b.addEventListener("click", pick);
+      b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+    });
+  }
+
+  // ---- genetic code wheel ----------------------------------------------------------------------
+  let wheel = null;
+  function buildWheel() {
+    wheel = window.WHEEL.build($("wheel"), {
+      onPick(codon) { setSlot(S.sel, codon); },
+      onHover(codon) { V.hoverCodon = codon; wheel.update(wheelState()); },
+    });
+    $("legend").innerHTML = ["hydrophobic", "polar", "acidic", "basic", "special", "stop"].map((k) => `<span><i style="background:${AM.CLASSES[k].fill};border-color:${AM.CLASSES[k].stroke}"></i>${AM.CLASSES[k].label}</span>`).join("");
+  }
+  const wheelState = () => ({ slots: slotCodons(frame()), selected: S.sel, hover: V.hoverCodon });
+
+  // ---- bases guide -----------------------------------------------------------------------------
+  const BASE_FACTS = {
+    A: { ja: "アデニン", kind: "プリン塩基（二重環）", note: "Tと水素結合2本でペアになる。エネルギー通貨のATPにも含まれる。" },
+    T: { ja: "チミン", kind: "ピリミジン塩基（単環）", note: "Aと水素結合2本。メチル基（CH₃）をもつ。RNAではかわりにウラシル（U）が使われる。" },
+    G: { ja: "グアニン", kind: "プリン塩基（二重環）", note: "Cと水素結合3本。G–Cが多いDNAは、熱でほどけにくい。" },
+    C: { ja: "シトシン", kind: "ピリミジン塩基（単環）", note: "Gと水素結合3本でペアになる。" },
+  };
+  function buildGuide() {
+    const colors = { A: "#3E9B5E", T: "#D2584A", G: "#4A6FC8", C: "#B97F10" };
+    let h = "";
+    ["A", "T", "G", "C"].forEach((k) => {
+      const f = BASE_FACTS[k];
+      h += `<div class="gcard"><h3><span class="big" style="color:var(--b-${k})">${k}</span>${f.ja}</h3><div class="tags"><span class="tag2">${f.kind}</span></div>${MOL.svgBase(k, { colors })}<p>${f.note}</p></div>`;
+    });
+    h += ["A", "G"].map((k) => `<div class="gcard" style="grid-column:1/-1"><h3><span class="big">${k}–${C.complement(k)}</span>水素結合 ${k === "A" ? 2 : 3} 本</h3>${MOL.pairFigure(k, { colors, scale: 30 })}<p>点線が水素結合です。「糖」と書いた丸は、骨格のデオキシリボースにつながる位置。大きいプリン塩基と小さいピリミジン塩基が組むので、どの塩基対も幅はほぼ同じになります。</p></div>`).join("");
+    $("guide").innerHTML = h;
+  }
+
+  // ---- text -> codons --------------------------------------------------------------------------
+  let converted = [];
   function convertText() {
-    const chars = Array.from(S.text);
-    converted = chars.map((ch, i) => C.charToCodon(ch, S.textMode, S.textChoices[i] || 0));
+    converted = Array.from(S.text).map((ch, i) => C.charToCodon(ch, S.textMode, S.textChoices[i] || 0));
   }
   function renderChips() {
     const wrap = $("chips");
@@ -316,7 +535,7 @@
       chip.innerHTML = `<span class="c"></span><span class="k"></span><span class="a"></span>`;
       chip.querySelector(".c").textContent = ch;
       chip.querySelector(".k").textContent = r.codon || "···";
-      chip.querySelector(".a").textContent = r.kind === "ok" ? (r.aa === "*" ? "Stop" : C.AA_NAMES[r.aa]) : r.note;
+      chip.querySelector(".a").textContent = r.kind === "ok" ? (r.aa === "*" ? "Stop" : AM.AA[r.aa].ja) : r.note;
       if (r.kind === "ok" && r.options > 1) {
         chip.classList.add("cycle");
         chip.tabIndex = 0;
@@ -342,19 +561,63 @@
     if (!list.length) return;
     const frames = [];
     for (let i = 0; i < list.length; i += N_CODONS) {
-      const codons = [0, 1, 2, 3].map((j) => (list[i + j] ? list[i + j].codon : null));
-      frames.push(codonsToFrame(codons, S.complement));
+      frames.push(codonsToFrame([0, 1, 2, 3].map((j) => (list[i + j] ? list[i + j].codon : null)), S.complement));
     }
     S.frames = frames;
     S.cur = 0;
     changed();
   }
 
+  // ---- translation animation -------------------------------------------------------------------
+  let trTimer = null;
+  function stopTranslate(msg) {
+    clearTimeout(trTimer); trTimer = null;
+    V.trace = -1;
+    $("btnTranslate").textContent = "読み取りを始める";
+    if (msg != null) $("trInfo").textContent = msg;
+    renderSlots(); pushHelix();
+  }
+  function renderRibbon(i, done) {
+    const codons = slotCodons(frame());
+    $("rib").innerHTML = codons.map((k, j) => `<span class="cd ${j === i ? "now" : j < i || done ? "done" : ""}">${k || "···"}</span>`).join('<span class="lbl">›</span>');
+  }
+  function startTranslate() {
+    if (trTimer) { stopTranslate("止めました"); return; }
+    const codons = slotCodons(frame());
+    $("peptide").textContent = "";
+    $("btnTranslate").textContent = "止める";
+    let i = 0, beads = 0;
+    const step = () => {
+      if (i >= N_CODONS) { renderRibbon(-1, true); stopTranslate(`終了（${beads}個のアミノ酸）`); return; }
+      const codon = codons[i];
+      V.trace = i;
+      renderRibbon(i, false); renderSlots(); pushHelix();
+      const H = window.Helix; if (H && H.ready) H.focusPair(3 * i + 1);
+      if (!codon) { stopTranslate("空の枠に来たので、ここで終了しました"); renderRibbon(i, false); return; }
+      const aa = C.aaOf(codon);
+      $("trInfo").textContent = `${codon} → ${aaName(aa)}`;
+      const pep = $("peptide");
+      if (aa === "*") {
+        const done = document.createElement("div"); done.className = "bead";
+        done.innerHTML = AM.mascot("*", { size: 68, tail: false }) + "<span>終止</span>";
+        pep.appendChild(done);
+        trTimer = setTimeout(() => { renderRibbon(-1, true); stopTranslate(`終止コドンで終了（${beads}個のアミノ酸）`); }, 1400);
+        return;
+      }
+      if (beads) { const l = document.createElement("div"); l.className = "link"; pep.appendChild(l); }
+      const bead = document.createElement("div"); bead.className = "bead";
+      bead.innerHTML = AM.mascot(aa, { size: 68, tail: false }) + `<span>${AM.AA[aa].three}</span>`;
+      pep.appendChild(bead);
+      beads++; i++;
+      trTimer = setTimeout(step, 1300);
+    };
+    step();
+  }
+
   // ---- paint panel / frames / output UI --------------------------------------------------------
   function buildPaint() {
     const wrap = $("brushes");
-    const items = [["A", "A"], ["T", "T"], ["G", "G"], ["C", "C"], ["off", "消灯"], ["color", "任意色"]];
-    items.forEach(([v, label]) => {
+    [["A", "A"], ["T", "T"], ["G", "G"], ["C", "C"], ["off", "消灯"], ["color", "任意色"]].forEach(([v, label]) => {
       const b = document.createElement("button");
       b.type = "button"; b.dataset.brush = v; b.setAttribute("role", "radio");
       if (/^[ATGC]$/.test(v)) b.innerHTML = `<span class="sw"></span>${label}`; else b.textContent = label;
@@ -370,7 +633,7 @@
     ["A", "T", "G", "C"].forEach((k) => {
       const lab = document.createElement("label");
       lab.innerHTML = `${k}<input type="color" aria-label="${k}の色">`;
-      lab.querySelector("input").addEventListener("input", (e) => { S.palette[k] = e.target.value; changed(); });
+      lab.querySelector("input").addEventListener("input", (e) => { S.palette[k] = e.target.value; applyUiColours(); changed(); });
       pr.appendChild(lab);
     });
   }
@@ -388,7 +651,7 @@
     let s = '<svg viewBox="0 0 96 16" aria-hidden="true">';
     for (let k = 0; k < N_PAIRS; k++) for (let st = 0; st < 2; st++) {
       const cell = f[2 * k + st];
-      const fill = cell === "-" ? "#26324a" : rgbToHex(cellRgb(cell));
+      const fill = cell === "-" ? "#E8DFC8" : rgbToHex(cellRgb(cell));
       s += `<circle cx="${4 + k * 8}" cy="${4 + st * 8}" r="3" fill="${fill}"/>`;
     }
     return s + "</svg>";
@@ -402,7 +665,7 @@
       t.tabIndex = 0;
       t.setAttribute("role", "button");
       t.setAttribute("aria-current", String(i === S.cur));
-      const codons = [0, 1, 2, 3].map((c) => slotCodon(f, c) || "···").join(" ");
+      const codons = slotCodons(f).map((k) => k || "···").join(" ");
       t.innerHTML = thumbSvg(f) + `<span>${i + 1}: ${codons}</span>`;
       const pick = () => { S.cur = i; renderAll(); persist(); };
       t.addEventListener("click", pick);
@@ -430,13 +693,36 @@
     $("autoSend").checked = S.autoSend;
     $("complement").checked = S.complement;
     $("fxPreview").checked = S.previewFx;
+    $("autoRotate").checked = S.autoRotate;
+    $("colorMode").value = S.colorMode;
     $("textInput").value = S.text;
     $("textMode").value = S.textMode;
   }
 
-  function renderAll() {
-    renderSlots(); renderPaint(); renderFrames(); renderOutput();
-    convertText(); renderChips();
+  // ---- tabs ------------------------------------------------------------------------------------
+  function setTab(name) {
+    V.tab = name;
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.id === "tab-" + name)));
+    document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "p-" + name));
+    renderSlots(); pushHelix();
+  }
+  function wireTabs() {
+    const tabs = [...document.querySelectorAll(".tab")];
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => setTab(t.id.slice(4)));
+      t.addEventListener("keydown", (e) => {
+        const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (d) { const n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); setTab(n.id.slice(4)); }
+      });
+    });
+  }
+
+  function renderAll(light) {
+    applyUiColours();
+    renderSlots(); renderInspector(); renderPaint(); renderFrames(); renderOutput();
+    if (!light) { convertText(); renderChips(); }
+    if (wheel) wheel.update(wheelState());
+    pushHelix();
   }
   function changed() {
     renderAll();
@@ -467,7 +753,7 @@
     Dev.connected = on;
     const pill = $("connPill");
     pill.textContent = label || (on ? "接続中" : "未接続");
-    pill.className = "pill " + (on ? "on" : "off");
+    pill.className = "pill" + (on ? " on" : "");
     $("btnConnect").textContent = on ? "切断" : "接続";
     ["btnSend", "btnSave", "btnRead", "btnTest"].forEach((id) => ($(id).disabled = !on));
   }
@@ -662,8 +948,11 @@
     $("textInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) applyText(); });
     $("textMode").addEventListener("change", (e) => { S.textMode = e.target.value; S.textChoices = []; convertText(); renderChips(); persist(); });
     $("btnApplyText").addEventListener("click", applyText);
+    $("btnTranslate").addEventListener("click", startTranslate);
     $("complement").addEventListener("change", (e) => { S.complement = e.target.checked; persist(); });
-    $("fxPreview").addEventListener("change", (e) => { S.previewFx = e.target.checked; persist(); });
+    $("fxPreview").addEventListener("change", (e) => { S.previewFx = e.target.checked; persist(); pushHelix(); });
+    $("autoRotate").addEventListener("change", (e) => { S.autoRotate = e.target.checked; if (window.Helix && window.Helix.ready) window.Helix.setAutoRotate(S.autoRotate); persist(); });
+    $("colorMode").addEventListener("change", (e) => { S.colorMode = e.target.value; if (window.Helix && window.Helix.ready) window.Helix.setColorMode(S.colorMode); persist(); });
 
     $("bri").addEventListener("input", (e) => { S.bri = +e.target.value; renderOutput(); persist(); scheduleSend(); });
     $("fx").addEventListener("change", (e) => { S.fx = +e.target.value; renderOutput(); persist(); scheduleSend(); });
@@ -686,19 +975,27 @@
     if ("serial" in navigator) {
       navigator.serial.addEventListener("disconnect", () => { if (Dev.connected) teardown("USBが外れました"); });
     } else {
-      notice("このブラウザはWeb Serialに対応していないため、機器には接続できません（プレビューのみ）。ChromeまたはEdgeで開いてください。");
+      notice("このブラウザはWeb Serialに対応していないため、機器には接続できません（画面での学習・プレビューは使えます）。ChromeまたはEdgeで開いてください。");
       $("btnConnect").disabled = true;
     }
   }
 
   // ---- start -----------------------------------------------------------------------------------
   loadSaved();
+  applyUiColours();
   buildBoard();
   buildSlots();
   buildPaint();
+  buildWheel();
+  buildGuide();
+  wireTabs();
   wire();
   setConn(false);
+  convertText();
+  renderChips();
   renderAll();
   requestAnimationFrame(loop);
-  window.__dna = { S, C, Dev, cmd, frameHex, sendAll, readBack };   // handy for debugging in the console
+  whenHelix(bindHelix);
+  setTimeout(() => { if (!(window.Helix && window.Helix.ready)) { const fb = $("helixFallback"); if (!window.Helix) { fb.hidden = false; fb.textContent = "3Dモデルを読み込めませんでした（three.js をインターネットから取得できない可能性があります）。基板プレビューと各種機能は使えます。"; } } }, 12000);
+  window.__dna = { S, V, C, Dev, cmd, frameHex, sendAll, readBack, paintLed, setSlot, selectSlot, setTab, startTranslate };   // debugging handle
 })();
