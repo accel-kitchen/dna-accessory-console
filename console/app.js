@@ -203,8 +203,8 @@
     let dmin = Infinity;
     for (let i = 0; i < B.leds.length; i++) for (let j = i + 1; j < B.leds.length; j++) dmin = Math.min(dmin, Math.hypot(B.leds[i].x - B.leds[j].x, B.leds[i].y - B.leds[j].y));
     const R = Math.min(3.1, dmin * 0.44);
-    const vy0 = B.bounds[1] - 4, vh = B.bounds[3] + 4 - vy0, vw = 70;
-    svg.setAttribute("viewBox", `${(cx - vw / 2).toFixed(2)} ${vy0.toFixed(2)} ${vw} ${vh.toFixed(2)}`);
+    const vy0 = B.bounds[1] - 4, vh = B.bounds[3] + 4 - vy0, vw = 84;
+    svg.setAttribute("viewBox", `${(cx - 30).toFixed(2)} ${vy0.toFixed(2)} ${vw} ${vh.toFixed(2)}`);
     svg.parentElement.style.aspectRatio = `${vw} / ${vh.toFixed(2)}`;
     const defs = el("defs", {}, svg);
     const f = el("filter", { id: "blur", x: "-100%", y: "-100%", width: "300%", height: "300%" }, defs);
@@ -223,17 +223,28 @@
       const t = el("text", { x: nx, y: a.y + 0.9, class: "pairNo" }, svg);
       t.textContent = k + 1;
     }
+    // one codon "slot" per 3 base pairs; the block is drawn in local units and scaled to fit the codon spacing
+    const spacing = B.leds[6].y - B.leds[0].y;
+    const kk = Math.min(1.15, spacing / 17);
     for (let c = 0; c < N_CODONS; c++) {
-      const y0 = codTop(c), y1 = codBot(c);
+      const y0 = codTop(c), y1 = codBot(c), cy = (y0 + y1) / 2;
       el("path", { d: `M${bx} ${y0} h1.5 V${y1} h-1.5`, class: "brk" }, svg);
-      const cy = (y0 + y1) / 2;
-      const t0 = el("text", { x: bx + 4, y: cy - 4.2, class: "cod2" }, svg);
+      const g = el("g", { class: "slotg", tabindex: 0, role: "button", "aria-label": `コドン${c + 1}を選ぶ`, transform: `translate(${(bx + 4).toFixed(2)} ${cy.toFixed(2)}) scale(${kk.toFixed(3)})` }, svg);
+      const bg = el("rect", { x: -2, y: -8.6, width: 3 * 6.6 + 3.6, height: 17.2, rx: 3, class: "slotbg" }, g);
+      const t0 = el("text", { x: 0, y: -5.7, class: "cod2" }, g);
       t0.textContent = `コドン${c + 1}`;
-      const t1 = el("text", { x: bx + 4, y: cy - 0.5, class: "cod" }, svg);
-      const t2 = el("text", { x: bx + 4, y: cy + 3.2, class: "cod2" }, svg);
-      const hit = el("rect", { x: bx - 2, y: y0, width: 22, height: y1 - y0, fill: "transparent", style: "cursor:pointer" }, svg);
-      hit.addEventListener("click", () => selectSlot(c));
-      codLabels.push([t1, t2]);
+      const tiles = [];
+      for (let j = 0; j < 3; j++) {
+        const tg = el("g", { class: "btile", "data-pos": j }, g);
+        el("rect", { x: j * 6.6, y: -4.2, width: 5.8, height: 6.4, rx: 1.6 }, tg);
+        el("text", { x: j * 6.6 + 2.9, y: 0.35, class: "bt" }, tg);
+        tiles.push(tg);
+        tg.addEventListener("click", (e) => { e.stopPropagation(); S.selPos = j; selectSlot(c); });
+      }
+      const t1 = el("text", { x: 0, y: 6, class: "cod" }, g);
+      g.addEventListener("click", () => selectSlot(c));
+      g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectSlot(c); } });
+      codLabels.push({ g, bg, tiles, name: t1, sub: { textContent: "" } });
     }
     B.leds.forEach((l, i) => {
       const halo = el("circle", { cx: l.x, cy: l.y, r: (R * 1.19).toFixed(2), filter: "url(#blur)", class: "halo", opacity: 0 }, svg);
@@ -263,7 +274,7 @@
       const rgb = cellRgb(f[i]);
       const k = scales ? scales[i] / 255 : 1;
       const lit = rgb[0] + rgb[1] + rgb[2] > 0 && k > 0.02;
-      const col = lit ? `rgb(${Math.round(rgb[0] * k)},${Math.round(rgb[1] * k)},${Math.round(rgb[2] * k)})` : "#0E1126";
+      const col = lit ? `rgb(${Math.round(rgb[0] * k)},${Math.round(rgb[1] * k)},${Math.round(rgb[2] * k)})` : "#DDD4BE";
       ledEls[i].c.setAttribute("fill", col);
       ledEls[i].halo.setAttribute("fill", col);
       ledEls[i].halo.setAttribute("opacity", lit ? 0.6 * k : 0);
@@ -369,59 +380,31 @@
     changed();
   }
 
-  // ---- codon slots -----------------------------------------------------------------------------
-  const slotEls = [];
-  function buildSlots() {
-    const wrap = $("slots");
-    for (let c = 0; c < N_CODONS; c++) {
-      const d = document.createElement("div");
-      d.className = "slot";
-      d.setAttribute("role", "button");
-      d.tabIndex = 0;
-      d.innerHTML = `<span class="n">${c + 1}</span><div class="tiles"></div><div class="aa"></div>
-        <input type="text" maxlength="3" autocomplete="off" spellcheck="false" aria-label="コドン${c + 1}の塩基3文字">`;
-      const input = d.querySelector("input");
-      d.addEventListener("click", (e) => { if (e.target === input) return; selectSlot(c); });
-      d.addEventListener("keydown", (e) => { if (e.target === d && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); selectSlot(c); } });
-      input.addEventListener("focus", () => { if (S.sel !== c) selectSlot(c); });
-      input.addEventListener("input", () => {
-        const norm = C.normalizeCodon(input.value);
-        input.classList.toggle("bad", input.value.length >= 3 && !norm);
-        if (norm) { S.sel = c; setSlot(c, norm); }
-      });
-      input.addEventListener("blur", () => { input.classList.remove("bad"); renderSlots(); });
-      wrap.appendChild(d);
-      slotEls.push({ d, input, tiles: d.querySelector(".tiles"), aa: d.querySelector(".aa") });
-    }
-  }
+  // ---- codon labels on the board (the codon "slots") ------------------------------------------
   function renderSlots() {
     const f = frame();
     for (let c = 0; c < N_CODONS; c++) {
-      const s = slotEls[c];
-      s.d.setAttribute("aria-pressed", String(c === S.sel));
-      const codon = slotCodon(f, c);
-      if (document.activeElement !== s.input) s.input.value = codon || "";
-      s.input.placeholder = "---";
-      s.tiles.textContent = "";
+      const L = codLabels[c], codon = slotCodon(f, c);
+      L.g.setAttribute("aria-pressed", String(c === S.sel));
+      L.g.classList.toggle("sel", c === S.sel);
       for (let j = 0; j < 3; j++) {
-        const cell = f[2 * (3 * c + j)];
-        const t = document.createElement("span");
-        t.className = "btile" + (c === S.sel && j === S.selPos ? " pos-sel" : "");
-        if (/^[ATGC]$/.test(cell)) { t.dataset.b = cell; t.textContent = cell; }
-        else { t.classList.add("off"); t.textContent = cell === "-" ? "·" : "◆"; if (cell[0] === "#") { t.style.background = cell; t.style.color = "#fff"; t.classList.remove("off"); } }
-        t.addEventListener("click", (e) => { e.stopPropagation(); S.selPos = j; selectSlot(c); });
-        s.tiles.appendChild(t);
+        const cell = f[2 * (3 * c + j)], tg = L.tiles[j];
+        const letter = /^[ATGC]$/.test(cell) ? cell : "";
+        tg.dataset.b = letter || (cell[0] === "#" ? "x" : "off");
+        tg.firstChild.style.fill = letter ? `var(--b-${letter})` : cell[0] === "#" ? cell : "";
+        tg.lastChild.textContent = letter || (cell === "-" ? "·" : "◆");
+        tg.classList.toggle("possel", c === S.sel && j === S.selPos);
       }
       if (codon) {
         const aa = C.aaOf(codon);
-        s.aa.innerHTML = `${aa === "*" ? "終止" : AM.AA[aa].ja}<small>${aa === "*" ? "Stop" : AM.AA[aa].three + " · " + aa}</small>`;
+        L.name.textContent = aa === "*" ? "終止" : AM.AA[aa].ja;
+        L.name.setAttribute("font-size", L.name.textContent.length > 6 ? "2.5" : "3");
+        L.sub.textContent = aa === "*" ? "Stop" : `${AM.AA[aa].three} · ${aa}`;
       } else {
         const any = [0, 1, 2].some((j) => f[2 * (3 * c + j)] !== "-" || f[2 * (3 * c + j) + 1] !== "-");
-        s.aa.innerHTML = any ? "個別の色<small>コドンではありません</small>" : "消灯<small>入力か表から選べます</small>";
+        L.name.textContent = any ? "個別の色" : "消灯";
+        L.sub.textContent = "";
       }
-      const lab = codLabels[c];
-      lab[0].textContent = codon || "—";
-      lab[1].textContent = codon ? (C.aaOf(codon) === "*" ? "Stop" : AM.AA[C.aaOf(codon)].ja) : "";
       codSel[c].setAttribute("opacity", c === focusedCodon() ? 1 : 0);
     }
   }
@@ -446,6 +429,19 @@
     return { cls: "miss", label: "ミスセンス" };
   }
 
+  function codonInputRow(codon) {
+    return `<div class="row" style="margin:0 0 4px"><label class="lbl" for="codonInput">塩基3文字で直接入力</label><input id="codonInput" type="text" maxlength="3" value="${codon || ""}" placeholder="例: ATG" autocomplete="off" spellcheck="false" style="flex:0 0 90px;text-transform:uppercase;letter-spacing:.2em;font-family:var(--f-disp-en);font-weight:600"></div>`;
+  }
+  function wireCodonInput(c) {
+    const inp = $("codonInput");
+    if (!inp) return;
+    inp.addEventListener("input", () => {
+      const norm = C.normalizeCodon(inp.value);
+      inp.style.borderColor = inp.value.length >= 3 && !norm ? "var(--coral)" : "";
+      if (norm) setSlot(c, norm);
+    });
+  }
+
   function renderInspector() {
     const box = $("insp");
     const f = frame();
@@ -453,16 +449,17 @@
     const codon = slotCodon(f, c);
     $("inspTitle").textContent = `コドン${c + 1}`;
     if (!codon) {
-      box.innerHTML = `<p class="lead">この枠は消灯中（または個別に塗った色）です。コドンを入れると、アミノ酸の性質や、1文字変えたときの変化がここに出ます。</p>
+      box.innerHTML = codonInputRow("") + `<p class="lead">この枠は消灯中（または個別に塗った色）です。コドンを入れると、アミノ酸の性質や、1文字変えたときの変化がここに出ます。</p>
         <div class="row"><button class="small" type="button" data-set="ATG">ATG（開始コドン）を入れる</button><button class="small" type="button" data-set="TAA">TAA（終止コドン）を入れる</button><button class="small" type="button" data-set="GCA">GCA を入れる</button></div>`;
       box.querySelectorAll("[data-set]").forEach((b) => b.addEventListener("click", () => setSlot(c, b.dataset.set)));
+      wireCodonInput(c);
       return;
     }
     const aa = C.aaOf(codon), A = AM.AA[aa], cls = AM.CLASSES[A.cls];
     const syn = C.AA_CODONS[aa];
     const water = A.water || "swim";
     const badge = (txt, col, bg) => `<span class="badge" style="color:${col};border-color:${col};background:${bg}">${txt}</span>`;
-    let html = `<div class="aa-head"><div class="aa-fig">${AM.mascot(aa, { size: 104 })}</div><div>
+    let html = codonInputRow(codon) + `<div class="aa-head"><div class="aa-fig">${AM.mascot(aa, { size: 104 })}</div><div>
       <div class="aa-name">${A.ja}<small>${A.en}${aa === "*" ? "" : " · " + A.three + " · " + aa}</small></div>
       <div>${badge(cls.label, cls.stroke, cls.fill)}${A.start ? badge("開始コドン", "#3C6B4B", "#E5EFE7") : ""}${badge(`同義コドン ${syn.length}個`, "#6E6776", "#F2EBD9")}</div>
       <div class="says">${A.says}</div></div></div>
@@ -491,6 +488,7 @@
         : `${POS_NAME[pos]}の塩基が変わると、アミノ酸も変わりやすい。この3通りのうち、同義は <b>${nSil}通り</b> だけ。`}
       タイルを押すと、基板と3Dモデルにも反映されます。</p></div>`;
     box.innerHTML = html;
+    wireCodonInput(c);
     box.querySelectorAll("[data-set]").forEach((b) => b.addEventListener("click", () => setSlot(c, b.dataset.set)));
     box.querySelectorAll(".bcard").forEach((b) => {
       const pick = () => { S.selPos = +b.dataset.pos; renderAll(true); persist(); };
@@ -1037,7 +1035,6 @@
   loadSaved();
   applyUiColours();
   buildBoard();
-  buildSlots();
   buildPaint();
   buildAlpha();
   buildWheel();

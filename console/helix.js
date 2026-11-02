@@ -10,8 +10,9 @@ const X0 = MOL.PAIR_X0;
 const COMP = { A: "T", T: "A", G: "C", C: "G" };
 const RADIUS = { C: 0.42, N: 0.40, O: 0.38, H: 0.24, P: 0.58 };
 const BOND_R = 0.13;
-const CPK = { C: "#A9B2C3", N: "#6C9BFF", O: "#FF6B5E", H: "#F1F1F4", P: "#F5B84A" };
-const BACKBONE = { C: "#CDBFA4", O: "#E4705D", P: "#F2C95C" };
+const CPK = { C: "#6B7280", N: "#3E6FE0", O: "#E0483C", H: "#C4C0CE", P: "#E0A22A" };
+const BACKBONE = { C: "#9A8E76", O: "#D2584A", P: "#E3B02D" };
+const PAPER = new THREE.Color("#F4EEDC");   // page colour: unfocused parts fade towards it instead of going dark
 
 function buildModel(kinds) {
   const atoms = [], bonds = [], hbonds = [];
@@ -105,12 +106,12 @@ const Helix = (() => {
     } catch (e) { return false; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 0.95;
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(30, 1, 1, 500);
-    scene.add(new THREE.HemisphereLight(0xdde7ff, 0x1d1a35, 1.15));
-    const key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(-40, 60, 80); scene.add(key);
-    const rim = new THREE.DirectionalLight(0x8fb6ff, 1.2); rim.position.set(50, -10, -70); scene.add(rim);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc4aa, 1.25));
+    const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-40, 60, 80); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xbcd2ff, 0.9); rim.position.set(50, -10, -70); scene.add(rim);
     root = new THREE.Group(); scene.add(root);
     helixGroup = new THREE.Group(); helixGroup.rotation.x = -Math.PI / 2; root.add(helixGroup);
     bindPointer();
@@ -170,7 +171,7 @@ const Helix = (() => {
         dashes.push({ a: pa.clone().lerp(pb, t0), b: pa.clone().lerp(pb, t1), pair: h.pair });
       }
     });
-    hbMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xffb3c6, transparent: true, opacity: 0.9 }), Math.max(1, dashes.length));
+    hbMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xd77a95, transparent: true, opacity: 0.95 }), Math.max(1, dashes.length));
     hbMesh.userData.dashes = dashes;
     dashes.forEach((d, i) => setStick(hbMesh, i, d.a, d.b, 0.075));
     helixGroup.add(hbMesh);
@@ -187,14 +188,14 @@ const Helix = (() => {
       const c = new THREE.Vector3(); let n = 0;
       model.atoms.forEach((a) => { if (a.owner === o && a.ring) { c.add(a.p); n++; } });
       c.multiplyScalar(1 / Math.max(1, n));
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0.0 }));
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, depthTest: false, opacity: 0.0 }));
       sp.position.copy(c); sp.scale.setScalar(8.5); sp.renderOrder = 5;
       helixGroup.add(sp); glows.push(sp);
     }
 
     // invisible pick plates, one per pair
     for (let k = 0; k < kinds.length; k++) {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(9.5, 9.5, 3.2, 28), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(9.5, 9.5, 3.2, 28), new THREE.MeshBasicMaterial({ color: 0x2a2730, transparent: true, opacity: 0, depthWrite: false }));
       m.rotation.x = Math.PI / 2; m.position.set(0, 0, k * RISE); m.userData.pair = k;
       helixGroup.add(m); plates.push(m);
     }
@@ -215,40 +216,39 @@ const Helix = (() => {
   function paint() {
     if (!model || !state) return;
     const col = new THREE.Color();
-    const dimBase = new THREE.Color("#2A3354");
+    const dimBase = new THREE.Color("#D3CBB8");
     const owners = kinds.length * 2;
     const ownerCol = [], ownerLit = [];
     for (let k = 0; k < kinds.length; k++) for (let s = 0; s < 2; s++) {
       const half = state[s === 0 ? "a" : "b"][k];
       const o = k * 2 + s, focus = focusSet.size === 0 || focusSet.has(k);
       const ident = new THREE.Color(half.ident);
-      const c = half.lit ? new THREE.Color(half.rgb[0] / 255, half.rgb[1] / 255, half.rgb[2] / 255) : ident.clone().lerp(dimBase, 0.62);
-      if (half.lit) c.lerp(new THREE.Color(1, 1, 1), 0.12);
-      ownerCol[o] = c.multiplyScalar(focus ? 1 : 0.42);
+      const c = half.lit ? new THREE.Color(half.rgb[0] / 255, half.rgb[1] / 255, half.rgb[2] / 255) : ident.clone().lerp(dimBase, 0.72);
+      ownerCol[o] = focus ? c : c.lerp(PAPER, 0.62);
       ownerLit[o] = half.lit && focus;
     }
-    const focusOf = (o) => (o < 0 ? 1 : focusSet.size === 0 || focusSet.has(o >> 1) ? 1 : 0.55);
+    const fade = (o) => (o < 0 || focusSet.size === 0 || focusSet.has(o >> 1) ? 0 : 0.55);
     model.atoms.forEach((a, i) => {
       if (colorMode === "cpk" || a.owner < 0) {
-        col.set(colorMode === "cpk" ? (a.owner < 0 ? (a.el === "C" ? BACKBONE.C : CPK[a.el]) : CPK[a.el]) : (BACKBONE[a.el] || BACKBONE.C)).multiplyScalar(focusOf(a.owner));
+        col.set(colorMode === "cpk" ? CPK[a.el] : (BACKBONE[a.el] || BACKBONE.C)).lerp(PAPER, fade(a.owner));
       } else {
         col.copy(ownerCol[a.owner]);
-        if (a.el === "H") col.lerp(new THREE.Color(1, 1, 1), 0.45);
-        else if (a.el === "N") col.lerp(new THREE.Color(0.35, 0.5, 1), 0.18);
-        else if (a.el === "O") col.lerp(new THREE.Color(1, 0.3, 0.25), 0.18);
+        if (a.el === "H") col.lerp(new THREE.Color(1, 1, 1), 0.3);
+        else if (a.el === "N") col.lerp(new THREE.Color(0.2, 0.35, 0.9), 0.16);
+        else if (a.el === "O") col.lerp(new THREE.Color(0.9, 0.2, 0.15), 0.16);
       }
       atomMesh.setColorAt(i, col);
     });
     atomMesh.instanceColor.needsUpdate = true;
     bondMesh.userData.sticks.forEach((s, i) => {
       const o = s.o.owner;
-      if (o < 0 || colorMode === "cpk") col.set("#8E97AD").multiplyScalar(focusOf(o)); else col.copy(ownerCol[o]).multiplyScalar(0.85);
+      if (o < 0 || colorMode === "cpk") col.set("#8C8498").lerp(PAPER, fade(o)); else col.copy(ownerCol[o]).multiplyScalar(0.82);
       bondMesh.setColorAt(i, col);
     });
     bondMesh.instanceColor.needsUpdate = true;
     for (let o = 0; o < owners; o++) {
       glows[o].material.color.copy(ownerCol[o]);
-      glows[o].material.opacity = ownerLit[o] ? 0.42 : 0;
+      glows[o].material.opacity = ownerLit[o] ? 0.5 : 0;
     }
     render();
   }
@@ -312,7 +312,7 @@ const Helix = (() => {
     camera.lookAt(0, camY, 0);
     // helix is centred by shifting its group down by half its height (z of the helix becomes y after rotation)
     helixGroup.position.y = -half;
-    plates.forEach((p, k) => { p.material.opacity = k === hover ? 0.1 : focusSet.has(k) && focusSet.size < kinds.length ? 0.035 : 0; });
+    plates.forEach((p, k) => { p.material.opacity = k === hover ? 0.09 : 0; });
     renderer.render(scene, camera);
     placeLabels();
   }

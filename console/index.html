@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="theme.css?v=6">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="theme.css?v=8">
+<link rel="stylesheet" href="style.css?v=8">
 <script type="importmap">{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"}}</script>
 </head>
 <body>
@@ -68,11 +68,12 @@
         </div>
       </div>
       <div class="stage-foot">
+        <label><input type="checkbox" id="complement" checked> 相補鎖も点灯</label>
         <label><input type="checkbox" id="fxPreview"> エフェクトをプレビュー</label>
         <label><input type="checkbox" id="autoRotate" checked> 自動で回す</label>
         <label>色 <select id="colorMode"><option value="led">LEDの色</option><option value="cpk">元素の色</option></select></label>
       </div>
-      <p class="stage-note">黄が鎖A、水色が鎖B。ドラッグで回転、ホイールで拡大、ダブルクリックで元の位置に戻ります。塩基対をクリックすると、基板の同じ位置のLEDが選ばれます。</p>
+      <p class="stage-note">基板の右にある4つのコドンを押すと、その枠が選ばれます。黄が鎖A、水色が鎖B。3Dモデルはドラッグで回転、ホイールで拡大、ダブルクリックで元の位置に戻ります。</p>
     </section>
 
     <div class="work">
@@ -85,13 +86,6 @@
 
       <!-- 01 コドン -->
       <div class="tabpanel" id="p-codon" role="tabpanel" aria-labelledby="tab-codon">
-        <section class="card">
-          <h2>コドン枠 <em>codons</em></h2>
-          <p class="lead">基板の4か所（3塩基対 = 6個ずつ）に表示するコドン。枠を選ぶと、下にそのコドンの中身が出ます。</p>
-          <div id="slots" class="slots"></div>
-          <label class="check"><input type="checkbox" id="complement" checked> 相補鎖（鎖B）も点灯する</label>
-        </section>
-
         <section class="card" id="alphaCard">
           <h2>アルファベット表 <em>alphabet</em></h2>
           <p class="lead">アルファベット1文字は、アミノ酸1つを表します（M = メチオニン、など）。文字を選ぶと、そのアミノ酸のコドンが選んでいる枠に入り、紹介が出ます。</p>
@@ -219,12 +213,12 @@
   </footer>
 </div>
 
-<script src="board-data.js?v=6"></script>
-<script src="codons.js?v=6"></script>
-<script src="aminoacids.js?v=6"></script>
-<script src="molecules.js?v=6"></script>
-<script src="wheel.js?v=6"></script>
-<script src="app.js?v=6"></script>
-<script type="module" src="helix.js?v=6"></script>
+<script src="board-data.js?v=8"></script>
+<script src="codons.js?v=8"></script>
+<script src="aminoacids.js?v=8"></script>
+<script src="molecules.js?v=8"></script>
+<script src="wheel.js?v=8"></script>
+<script src="app.js?v=8"></script>
+<script type="module" src="helix.js?v=8"></script>
 </body>
 </html>
