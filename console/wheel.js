@@ -56,7 +56,7 @@
           const [mx, my] = pol(rr, mid);
           const rot = mid > 90 && mid < 270 ? mid + 180 : mid;   // text follows the arc, never upside down
           const arcLen = (r1 - r0) * Math.PI / 180 * rr;
-          const label = arcLen < 30 ? aa : A.AA[aa].three;
+          const label = aa === "*" ? (arcLen < 40 ? "■" : "■ 終止") : arcLen < 40 ? aa : `${aa}・${A.AA[aa].three}`;
           el("text", { x: mx, y: my, class: "w-t5", fill: A.CLASSES[cls].ink, transform: `rotate(${rot.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)})` }, g, label);
           run = [];
         };
@@ -71,6 +71,7 @@
           const [wx, wy] = pol((RING[3][0] + RING[3][1]) / 2, (c0 + c1) / 2);
           el("text", { x: wx, y: wy, class: "w-t4", fill: A.CLASSES[cls].ink }, g, aa === "*" ? "■" : aa);
           [p3, p4].forEach((p) => {
+            el("title", {}, p, `${codon} → ${aa === "*" ? "終止" : aa + "（" + A.AA[aa].ja + "）"}`);
             p.dataset.codon = codon;
             p.addEventListener("click", () => handlers.onPick && handlers.onPick(codon));
             p.addEventListener("mouseenter", () => handlers.onHover && handlers.onHover(codon));
@@ -88,8 +89,9 @@
     // centre: current codon
     const hole = el("g", { class: "w-hole" }, svg);
     el("circle", { cx: CX, cy: CY, r: 46, fill: "#FAF6EB", stroke: "#E8DFC8", "stroke-width": 1.5 }, hole);
-    const ct = el("text", { x: CX, y: CY - 4, class: "w-centre" }, hole, "");
-    const cs = el("text", { x: CX, y: CY + 16, class: "w-centre-sub" }, hole, "");
+    const ct = el("text", { x: CX, y: CY - 15, class: "w-centre" }, hole, "");
+    const cl = el("text", { x: CX, y: CY + 6, class: "w-centre-letter" }, hole, "");
+    const cs = el("text", { x: CX, y: CY + 27, class: "w-centre-sub" }, hole, "");
     // slot badges
     const badges = el("g", { class: "w-badges" }, svg);
 
@@ -121,8 +123,9 @@
       if (hv) {
         const aa = C.CODON_TABLE[hv];
         ct.textContent = hv;
-        cs.textContent = aa === "*" ? "終止" : A.AA[aa].ja;
-      } else { ct.textContent = ""; cs.textContent = ""; }
+        cl.textContent = aa === "*" ? "■" : aa;
+        cs.textContent = aa === "*" ? "終止コドン" : A.AA[aa].ja;
+      } else { ct.textContent = ""; cl.textContent = ""; cs.textContent = ""; }
     }
     return { update };
   }

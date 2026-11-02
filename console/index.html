@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="theme.css?v=8">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="theme.css?v=9">
+<link rel="stylesheet" href="style.css?v=9">
 <script type="importmap">{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"}}</script>
 </head>
 <body>
@@ -101,10 +101,10 @@
 
         <section class="card">
           <h2>コドン表 <em>genetic code</em></h2>
-          <p class="lead">64通りのコドンと、指定されるアミノ酸の一覧。クリックすると、選んでいる枠のコドンが変わります。内側から1番目・2番目・3番目の塩基、外側がアミノ酸です。</p>
+          <p class="lead">64通りのコドンと、指定されるアミノ酸の一覧。クリックすると、選んでいる枠のコドンが変わります。内側から1番目・2番目・3番目の塩基、その外側の<b>大きな英字がアルファベット1文字</b>（アミノ酸の記号。ATG なら M）、いちばん外側がアミノ酸の名前です。</p>
           <div class="wheelbox"><svg id="wheel" role="group" aria-label="遺伝暗号の円形表"></svg></div>
           <div class="legend" id="legend"></div>
-          <p class="wheelhelp">桃色の枠が「同じアミノ酸になる仲間」、黒い枠が4つの枠のコドンです。</p>
+          <p class="wheelhelp">桃色の枠が「同じアミノ酸になる仲間」、黒い枠と番号が4つのコドンです。■は終止コドン（アルファベットは対応しません）。真ん中には、いま見ているコドンとアルファベット、アミノ酸の名前が出ます。</p>
         </section>
 
         <section class="card">
@@ -213,12 +213,12 @@
   </footer>
 </div>
 
-<script src="board-data.js?v=8"></script>
-<script src="codons.js?v=8"></script>
-<script src="aminoacids.js?v=8"></script>
-<script src="molecules.js?v=8"></script>
-<script src="wheel.js?v=8"></script>
-<script src="app.js?v=8"></script>
-<script type="module" src="helix.js?v=8"></script>
+<script src="board-data.js?v=9"></script>
+<script src="codons.js?v=9"></script>
+<script src="aminoacids.js?v=9"></script>
+<script src="molecules.js?v=9"></script>
+<script src="wheel.js?v=9"></script>
+<script src="app.js?v=9"></script>
+<script type="module" src="helix.js?v=9"></script>
 </body>
 </html>
