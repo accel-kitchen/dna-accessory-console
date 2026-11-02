@@ -1,0 +1,17 @@
+{
+  "write_probe": "PASS (create/read-back/delete)",
+  "base_pairs": 12,
+  "leds": 24,
+  "physical_drc_violations": 0,
+  "schematic_parity_issues": 0,
+  "unconnected_items_pending": 62,
+  "schematic_and_project_unchanged": true,
+  "original_pad_nets_and_uuids_retained": true,
+  "intra_pair_connections_verified": 12,
+  "dimensions_mm": [
+    29.0,
+    116.592
+  ],
+  "pcb_sha256": "d86f1f8ecf4da487d41be754277ea58619118ff15b272966a33ee3511d79f878",
+  "stage": "Outline / placement; power and inter-pair routing pending"
+}

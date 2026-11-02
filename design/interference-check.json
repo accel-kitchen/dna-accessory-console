@@ -1,0 +1,45 @@
+{
+  "components": 52,
+  "pairs_tested": 0,
+  "component_collisions": [],
+  "board_collisions": [],
+  "bboxes": {
+    "U1": {
+      "x": [
+        91.101,
+        108.899
+      ],
+      "board_y": [
+        124.014,
+        146.513
+      ],
+      "z": [
+        -4.554,
+        -0.076
+      ]
+    },
+    "J1": {
+      "x": [
+        96.025,
+        103.975
+      ],
+      "board_y": [
+        137.5,
+        144.5
+      ],
+      "z": [
+        1.595,
+        8.345
+      ]
+    }
+  },
+  "usb_plug": {
+    "mouth_board_y": 146.513,
+    "overmold_mm": [
+      12.35,
+      6.5
+    ],
+    "overlap_with_board_mm3": 0.0,
+    "overlap_height_mm": 0.814
+  }
+}

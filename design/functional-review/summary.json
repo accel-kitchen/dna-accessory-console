@@ -1,0 +1,405 @@
+{
+  "review_date": "2026-10-10T13:22:52+0900",
+  "kicad_version": "9.0.4",
+  "hashes": {
+    "dna-accesories.kicad_pcb": "0ce6e69989af6c709c72a3dcc6194fcdbd9ec259bcadeafc0fcd12aa57824a4c",
+    "dna-accesories.kicad_sch": "4bec82d2db8280cecb2c0d54d14edd433639ef3637b9a6938ea88d5fba0fc803",
+    "dna-accesories.kicad_pro": "bd364486922a0f724151f9c366924685510b83af8a003fcc0ac1a213c3ca6d1d"
+  },
+  "footprints": 26,
+  "tracks": 12,
+  "zones": 0,
+  "track_widths_mm": [
+    0.15
+  ],
+  "board_thickness_mm": 1.6,
+  "drc": {
+    "violations": 0,
+    "parity": 0,
+    "unconnected": 62,
+    "by_net": {
+      "POWER": 24,
+      "CODON_START": 1,
+      "GND": 24,
+      "CODON2": 1,
+      "Net-(U3-DOUT)": 1,
+      "Net-(U5-DOUT)": 1,
+      "Net-(U10-DIN)": 1,
+      "Net-(U1-BAT-)": 1,
+      "Net-(U1-BAT+)": 1,
+      "CODON3": 1,
+      "Net-(U11-DOUT)": 1,
+      "Net-(U15-DOUT)": 1,
+      "CODON4": 1,
+      "Net-(U17-DOUT)": 1,
+      "Net-(U21-DOUT)": 1,
+      "Net-(U23-DOUT)": 1
+    }
+  },
+  "erc": {
+    "total": 26,
+    "severity": {
+      "error": 25,
+      "warning": 1
+    },
+    "by_type": {
+      "pin_not_connected": 17,
+      "power_pin_not_driven": 6,
+      "pin_not_driven": 2,
+      "global_label_dangling": 1
+    }
+  },
+  "representative_pads": [
+    {
+      "ref": "J1",
+      "number": "1",
+      "net": "Net-(U1-BAT+)",
+      "xy": [
+        99.0,
+        142.25
+      ],
+      "smd": true
+    },
+    {
+      "ref": "J1",
+      "number": "2",
+      "net": "Net-(U1-BAT-)",
+      "xy": [
+        101.0,
+        142.25
+      ],
+      "smd": true
+    },
+    {
+      "ref": "J1",
+      "number": "S1",
+      "net": "",
+      "xy": [
+        96.6,
+        140.0
+      ],
+      "smd": true
+    },
+    {
+      "ref": "J1",
+      "number": "S2",
+      "net": "",
+      "xy": [
+        103.4,
+        140.0
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U2",
+      "number": "1",
+      "net": "POWER",
+      "xy": [
+        105.425,
+        40.424942
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U2",
+      "number": "2",
+      "net": "Net-(U2-DOUT)",
+      "xy": [
+        104.575,
+        40.424942
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U2",
+      "number": "3",
+      "net": "GND",
+      "xy": [
+        105.425,
+        39.575058
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U2",
+      "number": "4",
+      "net": "CODON_START",
+      "xy": [
+        104.575,
+        39.575058
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "0",
+      "net": "unconnected-(U1-A0{slash}D0-Pad0)",
+      "xy": [
+        91.5,
+        139.62
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "1",
+      "net": "unconnected-(U1-A1{slash}D1-Pad1)",
+      "xy": [
+        91.5,
+        137.08
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "2",
+      "net": "unconnected-(U1-A2{slash}D2-Pad2)",
+      "xy": [
+        91.5,
+        134.54
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "3",
+      "net": "unconnected-(U1-A3{slash}D3-Pad3)",
+      "xy": [
+        91.5,
+        132.0
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "3V3",
+      "net": "unconnected-(U1-Pad3V3)",
+      "xy": [
+        108.5,
+        134.54
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "4",
+      "net": "unconnected-(U1-A4{slash}D4-Pad4)",
+      "xy": [
+        91.5,
+        129.46
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "5",
+      "net": "unconnected-(U1-A5{slash}D5-Pad5)",
+      "xy": [
+        91.5,
+        126.92
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "6",
+      "net": "CODON_START",
+      "xy": [
+        91.5,
+        124.38
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "7",
+      "net": "unconnected-(U1-D7{slash}RX-Pad7)",
+      "xy": [
+        108.5,
+        124.38
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "8",
+      "net": "unconnected-(U1-D8{slash}SCK-Pad8)",
+      "xy": [
+        108.5,
+        126.92
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "9",
+      "net": "unconnected-(U1-D9{slash}MISO-Pad9)",
+      "xy": [
+        108.5,
+        129.46
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "10",
+      "net": "unconnected-(U1-D10{slash}MOSI-Pad10)",
+      "xy": [
+        108.5,
+        132.0
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "BAT_N",
+      "net": "Net-(U1-BAT-)",
+      "xy": [
+        95.5,
+        134.2
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "BAT_P",
+      "net": "Net-(U1-BAT+)",
+      "xy": [
+        95.5,
+        132.3
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "GND",
+      "net": "GND",
+      "xy": [
+        108.5,
+        137.08
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "NFC1",
+      "net": "unconnected-(U1-PadNFC1)",
+      "xy": [
+        103.8,
+        122.75
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "NFC2",
+      "net": "unconnected-(U1-PadNFC2)",
+      "xy": [
+        105.7,
+        122.75
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "TP1",
+      "net": "unconnected-(U1-GND__1-PadTP1)",
+      "xy": [
+        101.27,
+        137.85
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "TP2",
+      "net": "unconnected-(U1-~{RST}-PadTP2)",
+      "xy": [
+        98.73,
+        137.85
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "TP3",
+      "net": "unconnected-(U1-CLK-PadTP3)",
+      "xy": [
+        101.27,
+        140.39
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "TP5",
+      "net": "unconnected-(U1-DIO-PadTP5)",
+      "xy": [
+        98.73,
+        140.39
+      ],
+      "smd": true
+    },
+    {
+      "ref": "U1",
+      "number": "VUSB",
+      "net": "POWER",
+      "xy": [
+        108.5,
+        139.62
+      ],
+      "smd": true
+    }
+  ],
+  "interference": {
+    "components": 26,
+    "pairs_tested": 0,
+    "component_collisions": [],
+    "board_collisions": [],
+    "bboxes": {
+      "U1": {
+        "x": [
+          91.101,
+          108.899
+        ],
+        "board_y": [
+          121.514,
+          144.013
+        ],
+        "z": [
+          -4.554,
+          -0.076
+        ]
+      },
+      "J1": {
+        "x": [
+          96.025,
+          103.975
+        ],
+        "board_y": [
+          137.5,
+          144.5
+        ],
+        "z": [
+          1.595,
+          8.345
+        ]
+      }
+    },
+    "usb_plug": {
+      "mouth_board_y": 144.013,
+      "overmold_mm": [
+        12.35,
+        6.5
+      ],
+      "overlap_with_board_mm3": 19.925,
+      "overlap_height_mm": 0.814
+    }
+  },
+  "models_3d": {
+    "placed": 26,
+    "leds": 24,
+    "U1": "lib/102010448/102010448.step (rot X -90)",
+    "J1": "lib/B2B_PH_SM4_TB/B2B-PH-SM4-TB.step (rot X -90)"
+  }
+}

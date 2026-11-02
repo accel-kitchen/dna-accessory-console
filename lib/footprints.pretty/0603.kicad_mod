@@ -1,0 +1,123 @@
+(footprint "0603"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 2.544576 -1.272294 0)
+		(layer "F.SilkS")
+		(uuid "8a1883bc-058d-446f-8c43-c825d2ce6861")
+		(effects
+			(font
+				(size 1.001803 1.001803)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "0603"
+		(at 1.908844 1.27255 0)
+		(layer "F.Fab")
+		(uuid "217c5caa-a843-4b6d-93c1-0624783d32bf")
+		(effects
+			(font
+				(size 1.002016 1.002016)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "485b1d9c-cecf-4468-acd6-26cbb0c6f0f4")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "819a0703-4325-4d33-80a6-17eafa3b32b0")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -0.356 -0.432)
+		(end 0.356 -0.432)
+		(stroke
+			(width 0.1016)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "36a8adea-b917-4037-b4dd-811098416eeb")
+	)
+	(fp_line
+		(start -0.356 0.419)
+		(end 0.356 0.419)
+		(stroke
+			(width 0.1016)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "7c3b75d0-68be-45ce-8705-835e04932464")
+	)
+	(fp_poly
+		(pts
+			(xy -0.840134 -0.4801) (xy -0.3381 -0.4801) (xy -0.3381 0.470985) (xy -0.840134 0.470985)
+		)
+		(stroke
+			(width 0.01)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.Fab")
+		(uuid "08216120-e213-4ea9-9011-6c39a669861e")
+	)
+	(fp_poly
+		(pts
+			(xy 0.330792 -0.4801) (xy 0.8303 -0.4801) (xy 0.8303 0.470743) (xy 0.330792 0.470743)
+		)
+		(stroke
+			(width 0.01)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.Fab")
+		(uuid "92230f07-33f4-4757-91ea-b15f868e94ad")
+	)
+	(pad "1" smd rect
+		(at -0.85 0)
+		(size 1.1 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.102)
+		(uuid "75afddc9-e752-4377-b6c2-d1b4d05afb55")
+	)
+	(pad "2" smd rect
+		(at 0.85 0)
+		(size 1.1 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.102)
+		(uuid "6da6fddd-8852-4313-ada1-90ed61e4ab67")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/lib/LTST_C190KRKT/LED_LTST-C190_LTO.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

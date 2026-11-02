@@ -1,0 +1,15 @@
+{
+  "title": "DNA基板｜動作・設計レビュー",
+  "all_findings": 9,
+  "blockers": 3,
+  "confirmations": 6,
+  "power_rows": 24,
+  "battery_rows": 2,
+  "all_drc_rows": 62,
+  "images": true,
+  "anchors": true,
+  "local_links_valid": 28,
+  "desktop_overflow": false,
+  "mobile_overflow": false,
+  "errors": []
+}

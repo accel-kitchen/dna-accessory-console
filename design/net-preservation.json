@@ -1,0 +1,439 @@
+{
+  "unchanged": true,
+  "footprints": {
+    "U24": {
+      "uuid": "01146082-14eb-4667-ac09-5f5c3c7aff4d",
+      "pads": {
+        "1": "Net-(U24-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U23-DOUT)"
+      }
+    },
+    "U20": {
+      "uuid": "1706328d-5140-4c46-9b8f-28c34bcfdbf6",
+      "pads": {
+        "1": "Net-(U20-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "CODON4"
+      }
+    },
+    "U14": {
+      "uuid": "1b137b83-f523-4aad-9a8d-41e4ce53caa7",
+      "pads": {
+        "1": "Net-(U14-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "CODON3"
+      }
+    },
+    "U7": {
+      "uuid": "1ee8041e-585c-4a8b-aca3-e90c1d2ae774",
+      "pads": {
+        "1": "CODON2",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U6-DOUT)"
+      }
+    },
+    "U8": {
+      "uuid": "2624ebbb-2c10-46e1-b062-c290042f38de",
+      "pads": {
+        "1": "Net-(U8-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "CODON2"
+      }
+    },
+    "J1": {
+      "uuid": "299b4af4-150a-4190-bfc2-7c632543d722",
+      "pads": {
+        "1": "Net-(U1-BAT+)",
+        "2": "Net-(U1-BAT-)",
+        "S1": "",
+        "S2": ""
+      }
+    },
+    "U25": {
+      "uuid": "3147c42b-b3a4-4824-8ffe-f9bb3666843d",
+      "pads": {
+        "1": "CODON_END",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U24-DOUT)"
+      }
+    },
+    "U11": {
+      "uuid": "43b900ea-a3bc-4190-be6b-d3d4a8617f4b",
+      "pads": {
+        "1": "Net-(U11-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U10-DOUT)"
+      }
+    },
+    "U22": {
+      "uuid": "45d18488-f95d-4ce5-ba60-cd88f6752282",
+      "pads": {
+        "1": "Net-(U22-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U21-DOUT)"
+      }
+    },
+    "U18": {
+      "uuid": "46bee4ca-e686-4576-aa90-ff78aea2f288",
+      "pads": {
+        "1": "Net-(U18-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U17-DOUT)"
+      }
+    },
+    "U5": {
+      "uuid": "4abe0604-0f98-4035-b37b-9e0bb224e94b",
+      "pads": {
+        "1": "Net-(U5-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U4-DOUT)"
+      }
+    },
+    "U23": {
+      "uuid": "51304ec4-2d59-41f9-ba3e-10abfd816a69",
+      "pads": {
+        "1": "Net-(U23-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U22-DOUT)"
+      }
+    },
+    "U9": {
+      "uuid": "80a803a7-b05f-4679-967c-cb4de5e81e5a",
+      "pads": {
+        "1": "Net-(U10-DIN)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U8-DOUT)"
+      }
+    },
+    "U12": {
+      "uuid": "84f7e62f-3f44-4ffe-b8a0-1e6e382d3551",
+      "pads": {
+        "1": "Net-(U12-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U11-DOUT)"
+      }
+    },
+    "U10": {
+      "uuid": "9955cacf-f308-45a8-bac2-b958b2eeddfd",
+      "pads": {
+        "1": "Net-(U10-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U10-DIN)"
+      }
+    },
+    "U15": {
+      "uuid": "a57a6c42-fdb2-4783-9e00-a500046e3ab2",
+      "pads": {
+        "1": "Net-(U15-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U14-DOUT)"
+      }
+    },
+    "U3": {
+      "uuid": "ae6f8e30-8acf-49e8-a93e-bddf3a17aaa9",
+      "pads": {
+        "1": "Net-(U3-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U2-DOUT)"
+      }
+    },
+    "U4": {
+      "uuid": "af52cf97-6634-4016-af71-902a3175e3c1",
+      "pads": {
+        "1": "Net-(U4-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U3-DOUT)"
+      }
+    },
+    "U13": {
+      "uuid": "b339308e-8c46-4344-9332-160aec53b61e",
+      "pads": {
+        "1": "CODON3",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U12-DOUT)"
+      }
+    },
+    "U16": {
+      "uuid": "bb93d877-07c3-456e-a0cc-63ab66cf1a0c",
+      "pads": {
+        "1": "Net-(U16-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U15-DOUT)"
+      }
+    },
+    "U2": {
+      "uuid": "dbdc451c-bf0a-4f7a-aeb6-4c622b04b4b4",
+      "pads": {
+        "1": "Net-(U2-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "DIN_FIRST"
+      }
+    },
+    "U17": {
+      "uuid": "e7ad9ab1-3c41-416e-b126-5f20747ac8ae",
+      "pads": {
+        "1": "Net-(U17-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U16-DOUT)"
+      }
+    },
+    "U6": {
+      "uuid": "ec46ef3e-c8ff-4d14-bbfc-d8544526ef9c",
+      "pads": {
+        "1": "Net-(U6-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U5-DOUT)"
+      }
+    },
+    "U21": {
+      "uuid": "ecb7b98e-d5ae-434c-9215-620fed325fb4",
+      "pads": {
+        "1": "Net-(U21-DOUT)",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U20-DOUT)"
+      }
+    },
+    "U19": {
+      "uuid": "f73be577-ce71-4551-8220-71c9f22b7851",
+      "pads": {
+        "1": "CODON4",
+        "2": "POWER",
+        "3": "GND",
+        "4": "Net-(U18-DOUT)"
+      }
+    },
+    "R1": {
+      "uuid": "0bb14c1a-43f8-4f33-ad07-eb9bb1ec002e",
+      "pads": {
+        "1": "CODON_START",
+        "2": "DIN_FIRST"
+      }
+    },
+    "C4": {
+      "uuid": "0eb11548-c424-4c0c-885b-8cd723e1c95f",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C6": {
+      "uuid": "0f54fd59-1b94-4701-8ea2-4325f2cd0938",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C24": {
+      "uuid": "14a686d4-a0c1-4c10-8a6f-f0aad89f386f",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C2": {
+      "uuid": "4f577539-5d1b-462f-bd2b-0d6ffb126745",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C19": {
+      "uuid": "51b1db87-bd53-4c66-b3f0-4045d366577b",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C15": {
+      "uuid": "59e92b17-5f6f-4a92-8ff8-e8db9e86d740",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C20": {
+      "uuid": "7448a2af-8cf0-49d5-af1d-6f88f93da0f3",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C23": {
+      "uuid": "912072c7-e729-495f-8b27-b23a0da1ecb2",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C21": {
+      "uuid": "919abe17-8d30-48f7-ab8a-536c7fcd0921",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C14": {
+      "uuid": "93d66368-565e-4c86-b72c-ac7ac58f9bb2",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C3": {
+      "uuid": "9423882d-d709-4673-bb00-2ca5e3b26e10",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C11": {
+      "uuid": "b03f51ef-d8dd-49a2-b902-e476859a34c3",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C12": {
+      "uuid": "b121bf01-8532-4d35-ac55-1ab8c3aa5c32",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C5": {
+      "uuid": "b4bc5ef1-6612-4021-80a7-ffbf20baf10a",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C1": {
+      "uuid": "b711a7f1-9af8-4567-a4c3-aadc186cba16",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C25": {
+      "uuid": "ba0fe163-7101-4ddd-b2dd-45e7dae3267d",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C8": {
+      "uuid": "bd4a6164-0280-4d1f-94cb-b05f1196f722",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "U1": {
+      "uuid": "c67feda7-0419-47be-a69b-088d9cb4cdd9",
+      "pads": {
+        "0": "unconnected-(U1-A0{slash}D0-Pad0)",
+        "1": "unconnected-(U1-A1{slash}D1-Pad1)",
+        "2": "unconnected-(U1-A2{slash}D2-Pad2)",
+        "3": "unconnected-(U1-A3{slash}D3-Pad3)",
+        "3V3": "unconnected-(U1-Pad3V3)",
+        "4": "unconnected-(U1-A4{slash}D4-Pad4)",
+        "5": "unconnected-(U1-A5{slash}D5-Pad5)",
+        "6": "CODON_START",
+        "7": "unconnected-(U1-D7{slash}RX-Pad7)",
+        "8": "unconnected-(U1-D8{slash}SCK-Pad8)",
+        "9": "unconnected-(U1-D9{slash}MISO-Pad9)",
+        "10": "unconnected-(U1-D10{slash}MOSI-Pad10)",
+        "BAT_N": "Net-(U1-BAT-)",
+        "BAT_P": "Net-(U1-BAT+)",
+        "GND": "GND",
+        "NFC1": "unconnected-(U1-PadNFC1)",
+        "NFC2": "unconnected-(U1-PadNFC2)",
+        "TP1": "unconnected-(U1-GND__1-PadTP1)",
+        "TP2": "unconnected-(U1-~{RST}-PadTP2)",
+        "TP3": "unconnected-(U1-CLK-PadTP3)",
+        "TP5": "unconnected-(U1-DIO-PadTP5)",
+        "VUSB": "POWER"
+      }
+    },
+    "C9": {
+      "uuid": "c91768e8-c6be-482b-a55d-e6be320bb5b8",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C10": {
+      "uuid": "d1959290-f163-474e-a600-ba9b49a5d61a",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C7": {
+      "uuid": "d3a7ddf1-ef61-496f-a7b6-814f47cca81e",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C17": {
+      "uuid": "d63e8464-ffd3-479c-b91b-315ccdab1002",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C13": {
+      "uuid": "de66bdb7-368a-4649-a562-f3be5d433a46",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C16": {
+      "uuid": "ecc7a449-8b76-4b1b-ac5c-333dd7887e47",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C18": {
+      "uuid": "f83a0a95-045f-4c6e-8781-6b37843f6fdf",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C22": {
+      "uuid": "facb78d0-9ad2-420f-bb73-e91fe2a7effe",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    }
+  }
+}

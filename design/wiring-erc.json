@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schemas.kicad.org/erc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-10-10T17:50:40+0900",
+    "kicad_version": "9.0.4",
+    "sheets": [
+        {
+            "path": "/",
+            "uuid_path": "/39a00d90-ab18-44df-86d9-cc83da3529d4",
+            "violations": [
+                {
+                    "description": "Global label not connected anywhere else in the schematic",
+                    "items": [
+                        {
+                            "description": "Global Label 'CODON_END'",
+                            "pos": {
+                                "x": 1.4605,
+                                "y": 1.0414
+                            },
+                            "uuid": "d83ca074-37ce-4d40-9fe3-8ddca5d5dc74"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "global_label_dangling"
+                }
+            ]
+        }
+    ],
+    "source": "dna-accesories.kicad_sch"
+}
