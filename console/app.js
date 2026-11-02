@@ -197,38 +197,47 @@
   const svg = $("board");
   const ledEls = [], pairHi = [], codLabels = [], codSel = [];
   function buildBoard() {
-    svg.setAttribute("viewBox", "70 24 70 126");
+    // everything is laid out from the real LED coordinates, so a changed board design still draws correctly
+    const xs = B.leds.map((l) => l.x), ys = B.leds.map((l) => l.y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, halfW = (Math.max(...xs) - Math.min(...xs)) / 2;
+    let dmin = Infinity;
+    for (let i = 0; i < B.leds.length; i++) for (let j = i + 1; j < B.leds.length; j++) dmin = Math.min(dmin, Math.hypot(B.leds[i].x - B.leds[j].x, B.leds[i].y - B.leds[j].y));
+    const R = Math.min(3.1, dmin * 0.44);
+    const vy0 = B.bounds[1] - 4, vh = B.bounds[3] + 4 - vy0, vw = 70;
+    svg.setAttribute("viewBox", `${(cx - vw / 2).toFixed(2)} ${vy0.toFixed(2)} ${vw} ${vh.toFixed(2)}`);
+    svg.parentElement.style.aspectRatio = `${vw} / ${vh.toFixed(2)}`;
     const defs = el("defs", {}, svg);
     const f = el("filter", { id: "blur", x: "-100%", y: "-100%", width: "300%", height: "300%" }, defs);
-    el("feGaussianBlur", { stdDeviation: "1.6" }, f);
+    el("feGaussianBlur", { stdDeviation: (R * 0.5).toFixed(2) }, f);
     el("path", { d: B.outer, class: "pcb", "fill-rule": "evenodd" }, svg);
     B.holes.forEach((d) => el("path", { d, class: "hole" }, svg));
+    const bx = cx + halfW + R + 6, nx = cx - halfW - R - 4;
+    const codTop = (c) => B.leds[6 * c].y - R - 1, codBot = (c) => B.leds[6 * c + 5].y + R + 1;
     for (let c = 0; c < N_CODONS; c++) {
-      const y0 = B.leds[6 * c].y - 4, y1 = B.leds[6 * c + 5].y + 4;
-      codSel.push(el("rect", { x: 87, y: y0 + 0.6, width: 26, height: y1 - y0 - 1.2, rx: 3, class: "codsel", opacity: 0 }, svg));
+      codSel.push(el("rect", { x: cx - halfW - R - 1.6, y: codTop(c) - 0.6, width: 2 * (halfW + R + 1.6), height: codBot(c) - codTop(c) + 1.2, rx: 3, class: "codsel", opacity: 0 }, svg));
     }
     for (let k = 0; k < N_PAIRS; k++) {
       const a = B.leds[2 * k], b = B.leds[2 * k + 1];
-      pairHi.push(el("rect", { x: 88, y: a.y - 4.2, width: 24, height: 8.4, rx: 4.2, class: "pairhi", opacity: 0 }, svg));
+      pairHi.push(el("rect", { x: cx - halfW - R - 1, y: a.y - R - 0.9, width: 2 * (halfW + R + 1), height: 2 * R + 1.8, rx: R + 0.9, class: "pairhi", opacity: 0 }, svg));
       el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: "trace" }, svg);
-      const t = el("text", { x: 80, y: a.y + 0.9, class: "pairNo" }, svg);
+      const t = el("text", { x: nx, y: a.y + 0.9, class: "pairNo" }, svg);
       t.textContent = k + 1;
     }
     for (let c = 0; c < N_CODONS; c++) {
-      const y0 = B.leds[6 * c].y - 4, y1 = B.leds[6 * c + 5].y + 4;
-      el("path", { d: `M120 ${y0} h1.5 V${y1} h-1.5`, class: "brk" }, svg);
+      const y0 = codTop(c), y1 = codBot(c);
+      el("path", { d: `M${bx} ${y0} h1.5 V${y1} h-1.5`, class: "brk" }, svg);
       const cy = (y0 + y1) / 2;
-      const t0 = el("text", { x: 124, y: cy - 4.2, class: "cod2" }, svg);
+      const t0 = el("text", { x: bx + 4, y: cy - 4.2, class: "cod2" }, svg);
       t0.textContent = `コドン${c + 1}`;
-      const t1 = el("text", { x: 124, y: cy - 0.5, class: "cod" }, svg);
-      const t2 = el("text", { x: 124, y: cy + 3.2, class: "cod2" }, svg);
-      const hit = el("rect", { x: 118, y: y0, width: 22, height: y1 - y0, fill: "transparent", style: "cursor:pointer" }, svg);
+      const t1 = el("text", { x: bx + 4, y: cy - 0.5, class: "cod" }, svg);
+      const t2 = el("text", { x: bx + 4, y: cy + 3.2, class: "cod2" }, svg);
+      const hit = el("rect", { x: bx - 2, y: y0, width: 22, height: y1 - y0, fill: "transparent", style: "cursor:pointer" }, svg);
       hit.addEventListener("click", () => selectSlot(c));
       codLabels.push([t1, t2]);
     }
     B.leds.forEach((l, i) => {
-      const halo = el("circle", { cx: l.x, cy: l.y, r: 3.7, filter: "url(#blur)", class: "halo", opacity: 0 }, svg);
-      const c = el("circle", { cx: l.x, cy: l.y, r: 3.1, class: "led", tabindex: 0, role: "button" }, svg);
+      const halo = el("circle", { cx: l.x, cy: l.y, r: (R * 1.19).toFixed(2), filter: "url(#blur)", class: "halo", opacity: 0 }, svg);
+      const c = el("circle", { cx: l.x, cy: l.y, r: R, class: "led", tabindex: 0, role: "button" }, svg);
       const tt = el("title", {}, c);
       tt.textContent = `${l.ref} / 鎖${l.strand} / 塩基対${l.pair + 1} / コドン${l.codon + 1}`;
       c.addEventListener("click", () => onLedClick(i));
