@@ -2,7 +2,7 @@
 
 Requires shapely>=2.2.0. This is a decorative projection, not a molecular scale model.
 Revision 5: compact helix (all sizes are parameters), no hanging cap at the tip; the chain holes
-are two 2.0 mm holes in the lower corners of the controller collar.
+are two 2.0 mm holes in ears below the controller collar's USB-C edge.
 
 Parameters can be given as environment variables for experiments (DNA_D, DNA_P, DNA_A, DNA_RAIL,
 DNA_RUNG, DNA_OUT); the defaults are the committed design.
@@ -48,16 +48,23 @@ for i in range(PAIRS):
     pieces.append(LineString([(rung_min,y),(rung_max,y)]).buffer(RUNG_WIDTH/2,cap_style='round',quad_segs=12))
 
 # Broad lower collar supports the module and battery connector; merge both backbones.
-collar=box(CX-14.5,117.5,CX+14.5,146.0)
+# The collar is only as wide as the XIAO pads need; two ears reach below its USB-C edge, one on each
+# side of the plug (inner edges 16 mm apart), and carry the chain holes.
+COLLAR_HALF=12.0
+EAR_INNER=8.0
+EAR_BOTTOM=150.5
+collar=box(CX-COLLAR_HALF,117.5,CX+COLLAR_HALF,146.0)
 collar=collar.buffer(-2.0,quad_segs=16).buffer(2.0,quad_segs=16)
+ears=[box(CX+side*EAR_INNER if side>0 else CX-COLLAR_HALF,143.0,CX+COLLAR_HALF if side>0 else CX-EAR_INNER,EAR_BOTTOM).buffer(-1.0,quad_segs=16).buffer(1.0,quad_segs=16) for side in (1,-1)]
+collar=unary_union([collar]+ears).buffer(.5,quad_segs=16).buffer(-.5,quad_segs=16)
 pieces.append(collar)
 for side in (1,-1):pieces.append(LineString([strand(START+LENGTH,side),(CX+side*9,121.0)]).buffer(RAIL_WIDTH/2,quad_segs=12))
 board=unary_union(pieces).buffer(0).simplify(0.025,preserve_topology=True)
 assert board.geom_type=='Polygon',board.geom_type
 assert board.is_valid
-# Chain holes sit in the lower collar corners, concentric with the 2 mm corner radius (1.0 mm ring).
+# Chain holes sit in the ears below the collar (1.0 mm ring all round).
 HOLE_D=2.0
-hanging_holes=[(CX-12.5,144.0),(CX+12.5,144.0)]
+hanging_holes=[(CX-10.0,148.5),(CX+10.0,148.5)]
 # Eliminate tiny triangular slivers and round internal slots for a 1.2 mm router.
 clean_holes=[]
 for ring in board.interiors:
@@ -77,7 +84,7 @@ result={'design':f'DNA helix / constant {PAIR_DISTANCE:g} mm base pairs / layout
                  '12 pairs = 24 LEDs, U2/U3 through U24/U25.',
                  f'Every base pair has exactly {PAIR_DISTANCE:g} mm LED center-to-center spacing.',
                  'Two decorative turns; axial spacing is stylized.',
-                 'Chain holes: two 2.0 mm holes in the lower collar corners (USB-C side).',
+                 'Chain holes: two 2.0 mm holes in ears below the USB-C edge, one on each side of the plug.',
                  'Original schematic nets and LED symbol mapping are retained.']}
 OUT.write_text(json.dumps(result,indent=2),encoding='utf-8')
 print('Outline bounds:',tuple(round(x,3) for x in board.bounds),'cut-outs:',len(board.interiors))
