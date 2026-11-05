@@ -69,7 +69,7 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 ## 改訂5：らせんの縮小・吊り穴の移動・塩基文字の削除（2026-11-02〜03）
 
 - 外形 29.0 × 116.6 mm → 24.0 × 82.1 mm。マイコン部の幅は29 → 24 mm（XIAOのパッドが約20 mm）。
-  らせん部は約78 mm → 約41 mm（全長のうち、らせんは12対 × 4.0 mm）、幅は26.8 → 16.2 mm。
+  らせん部（先端〜襟）は88.1 mm → 49.1 mm、うち12対の間隔の合計は78 → 48 mm（12 × 4.0 mm）。らせんの幅は26.8 → 16.2 mm。
   LED間隔 10 → 5.5 mm、塩基対ピッチ 6.5 → 4.0 mm、梁幅 3.0 mm、バックボーン幅 3.2 mm、振幅 6.5 mm。
   これ以上詰める限界の目安：ピッチ3.8 mmは配線が収束しにくく（銅箔〜外形 0.56 mm では未接続が残った）、3.6 mm以下は梁幅2.8 mm以下になりLED周りのビアが入らない。
   ピッチ4.9 mm以下では抜き穴がほぼ消える（外形は梁のふくらみだけでらせんに見える）。
@@ -85,3 +85,8 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 - 更新前の状態：`pre-compact-20261102/`。`base-pairs.csv` の `base` 列は配列上の塩基で、シルクには出ていない。
 - 発注データ（`../fusion/`）は改訂5に合わせて再生成済み（`gen/dump_assembly_data.py` → `gen/make_fusion_package.py`）。
 - 試作ページ `../lp/` は `gen/make_lp_images.py` で、画像（3Dレンダリング）とLED座標の対応を再生成する。
+
+## 新旧の比較資料
+
+`comparison-rev4-rev5.html`（1ファイルで開ける）：改訂4（`pre-compact-20261102/`）と現在の基板を、同縮尺の3D画像・外形の重ね図・数値表で比較。
+再生成：`gen/compare_stats.py`（KiCad付属Python）→ `gen/make_comparison.py`。
