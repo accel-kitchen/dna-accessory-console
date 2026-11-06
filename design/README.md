@@ -29,7 +29,7 @@
 - `preview/front-kicad.svg`, `back-kicad.svg`: 実PCBから出力した図。
 - `pre-redesign-20261008/`: 改訂前のPCB・回路図・プロジェクト・ライブラリ表と変更したフットプリントのバックアップ。
 - `revision-01/`: LED間隔変更前の外形・配置版のバックアップ。
-- `../review.html`: 最新PCBの動作・電源・端子配置・実装条件まで含めたレビュー。現状は未接続62件があり、点灯不可。
+- `../review.html`: 改訂5の基板レビュー（配線・ネット・電源・製造余裕・3D干渉を実測）。旧レビュー（改訂3＋改訂4の追記）は `review-rev3-rev4.html`。生成は `gen/review_checks.py` → `gen/make_review.py`。`gen/build_functional_review.py` は旧レビュー用（出力先を `review-rev3-rev4.html` に変更済み）。
 - `functional-review/`: 再実行DRC/ERC、ネットリスト、対象ファイルのハッシュ、メーカー資料の保存版。
 - `layout-review.html`: 配置プレビュー生成時に出力する配置説明。主レビューは上書きしない。
 
@@ -51,15 +51,15 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 ## 改訂3（2026-10-10）
 
 - 表裏のシルクを追加：塩基文字（配列 ATG GCA TCG TAA と相補鎖）、水素結合（A-T 2本／G-C 3本）、糖・リン酸の環、吊り下げ穴リング、配列・凡例、裏面のUSB-C目印。再生成は `DNA_DEPS=<Shapely>` を指定して `gen/rebuild_dna_board.py`。
-- U1（XIAO）とJ1にSTEPを設定し、全26部品が3Dモデルを持つ。`gen/check_interference.py` で干渉計算（`interference-check.json`）。部品間・基板との重なりは0件。USB-Cプラグ（仮寸法）は基板下端に食い込むため `review.html` の指摘09。
+- U1（XIAO）とJ1にSTEPを設定し、全26部品が3Dモデルを持つ。`gen/check_interference.py` で干渉計算（`interference-check.json`）。部品間・基板との重なりは0件。USB-Cプラグ（仮寸法）は基板下端に食い込むため `review-rev3-rev4.html` の指摘09（改訂4で解消、改訂5の `review.html` で再確認）。
 - 更新前の状態：`pre-silk-20261010/`。DRC違反0件、未接続62件は変わらず。
 
 ## 改訂4：配線（2026-10-10）
 
-- `review.html` の指摘01に従い、LEDのVDD/DOUTを入れ替え（VDD=2番、DOUT=1番。`gen/swap_led_pins.py`。シンボル位置は不変）。
-- POWER・GND・24段データ・J1とBAT端子を2層で配線（`gen/route_prep.py` → `gen/route_board.py` → `gen/route_apply.py`）。KiCad 9.0.4：DRC違反0、未接続0、回路図差異0（`wiring-drc.json`）。ERCは変わらず26件（`wiring-erc.json`）。
+- `review-rev3-rev4.html` の指摘01に従い、LEDのVDD/DOUTを入れ替え（VDD=2番、DOUT=1番。`gen/swap_led_pins.py`。シンボル位置は不変）。
+- POWER・GND・24段データ・J1とBAT端子を2層で配線（`gen/route_prep.py` → `gen/route_board.py` → `gen/route_apply.py`）。KiCad 9.0.4：DRC違反0、未接続0、回路図差異0（`wiring-drc.json`）。ERCは警告1件（`wiring-erc.json`。ここに書いていた「26件」は誤りで、10月10日のファイルも1件）。
 - 未対応：電池単独給電、LED近傍コンデンサ、DIN直列抵抗の場所、USB-C干渉（review指摘03〜09）。
-- 配線前のバックアップ：`pre-wiring-20261010/`。`review.html` は先頭に注記のみ追加し、本文は配線前の状態。`rebuild_dna_board.py` を再実行すると配線は消える。
+- 配線前のバックアップ：`pre-wiring-20261010/`。旧レビューは先頭に注記のみ追加し、本文は配線前の状態（現在は `review-rev3-rev4.html`）。`rebuild_dna_board.py` を再実行すると配線は消える。
 - 配線ルータは自作のグリッド探索で乱数順序（SEED）を使うため、結果の再現には `gen/_routes.json` を使用する。
 
 ## 発注用データ（2026-10-10）
@@ -90,3 +90,7 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 
 `comparison-rev4-rev5.html`（1ファイルで開ける）：改訂4（`pre-compact-20261102/`）と現在の基板を、同縮尺の3D画像・外形の重ね図・数値表で比較。
 再生成：`gen/compare_stats.py`（KiCad付属Python）→ `gen/make_comparison.py`。
+
+## 改訂5のレビュー（2026-11-06）
+
+`../review.html`。DRC・ERCに加え、厳しい規則のDRCで間隔を実測、基板のトラックから電源の電圧降下を計算、ネット連鎖と部品位置を照合、3D干渉と製造データ（ガーバー・ドリル・BOM・実装座標）を確認。結論：配線・形状・製造データに誤りなし。未解決は「電池単独でLEDが点灯しない」（設計判断）。吊り穴まわりの肉厚1.0 mm、ビア環0.13 mmは確認をすすめる。

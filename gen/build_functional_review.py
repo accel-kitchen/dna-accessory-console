@@ -53,5 +53,5 @@ for token, value in replacements.items():
     report = report.replace(token, value)
 assert not re.search(r'@@[A-Z_]+@@', report)
 assert len(rows) == 62 and len(erc_rows) == 26
-(ROOT / 'review.html').write_text(report, encoding='utf-8')
-print(f'Saved review.html: {len(rows)} unconnected, {len(erc_rows)} ERC findings; source hashes unchanged.')
+(ROOT / 'design' / 'review-rev3-rev4.html').write_text(report, encoding='utf-8')
+print(f'Saved design/review-rev3-rev4.html: {len(rows)} unconnected, {len(erc_rows)} ERC findings; source hashes unchanged.')

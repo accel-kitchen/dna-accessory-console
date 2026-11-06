@@ -11,7 +11,7 @@ with sync_playwright() as p:
     page = browser.new_page(viewport={'width': 1440, 'height': 1100}, device_scale_factor=1)
     page.set_default_timeout(10000)
     page.on('pageerror', lambda error: errors.append(str(error)))
-    page.goto((root / 'review.html').as_uri(), wait_until='load')
+    page.goto((root / 'design' / 'review-rev3-rev4.html').as_uri(), wait_until='load')
     page.screenshot(path=str(out / 'review-desktop.png'), full_page=True)
     page.screenshot(path=str(out / 'review-desktop-top.png'))
     checks['title'] = page.title()
