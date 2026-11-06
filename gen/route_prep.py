@@ -22,5 +22,12 @@ for f in b.GetFootprints():
         pads.append(dict(ref=f.GetReference(),num=p.GetNumber(),net=p.GetNetname(),x=mm(p.GetX()),y=mm(p.GetY()),
             box=[mm(r.GetLeft()),mm(r.GetTop()),mm(r.GetRight()),mm(r.GetBottom())],
             F=p.IsOnLayer(pcb.F_Cu),B=p.IsOnLayer(pcb.B_Cu),drill=mm(p.GetDrillSizeX()),shape=int(p.GetShape())))
-json.dump(dict(edge=segs,pads=pads),open(str(ROOT/'gen'/'_board.json'),'w'))
+keepouts=[]
+for f in b.GetFootprints():
+    for z in f.Zones():
+        if z.GetIsRuleArea():
+            bb=z.GetBoundingBox()
+            keepouts.append(dict(ref=f.GetReference(),layers=[0 if l==pcb.F_Cu else 1 for l in z.GetLayerSet().Seq() if l in (pcb.F_Cu,pcb.B_Cu)],
+                tracks=bool(z.GetDoNotAllowTracks()),vias=bool(z.GetDoNotAllowVias()),box=[mm(bb.GetLeft()),mm(bb.GetTop()),mm(bb.GetRight()),mm(bb.GetBottom())]))
+json.dump(dict(edge=segs,pads=pads,keepouts=keepouts),open(str(ROOT/'gen'/'_board.json'),'w'))
 print(len(segs),len(pads))

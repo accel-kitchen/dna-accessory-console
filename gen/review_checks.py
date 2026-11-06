@@ -42,11 +42,29 @@ chain.append(('C(n-1) POWER/GND under U(n), same centre, back side',
                   and fps[f'C{i - 1}'].GetPosition() == fps[f'U{i}'].GetPosition()
                   and fps[f'C{i - 1}'].GetLayer() == pcb.B_Cu and fps[f'U{i}'].GetLayer() == pcb.F_Cu for i in range(2, 26))))
 cnt = collections.Counter(p.GetNetname() for f in fps.values() for p in f.Pads())
-chain.append(('POWER pad count = 50 (24 LED + 25 C + U1.VUSB)', cnt['POWER'] == 50))
-chain.append(('GND pad count = 50', cnt['GND'] == 50))
-chain.append(('U1.VUSB on POWER, U1.GND on GND', pad('U1', 'VUSB').GetNetname() == 'POWER' and pad('U1', 'GND').GetNetname() == 'GND'))
-chain.append(('J1.1 / J1.2 -> U1.BAT_P / BAT_N', pad('J1', 1).GetNetname() == pad('U1', 'BAT_P').GetNetname() and pad('J1', 2).GetNetname() == pad('U1', 'BAT_N').GetNetname()))
-chain.append(('POWER net has no battery connection (only U1.VUSB)', all(p.GetNetname() != 'POWER' or (f.GetReference()[0] in 'CU') for f in fps.values() for p in f.Pads())))
+def nets_of(*pads):
+    return {pad(r, n).GetNetname() for r, n in pads}
+exp_power = {(u, '2') for u in leds} | {(f'C{i}', '1') for i in list(range(1, 26)) + [27, 29]} | {('D1', '1'), ('D2', '1'), ('R2', '1')}
+exp_gnd = {(u, '3') for u in leds} | {(f'C{i}', '2') for i in range(1, 30)} | {('U1', 'GND'), ('U1', 'BAT_N'), ('J1', '2'), ('U26', '2'), ('Q1', '2'), ('R3', '2'), ('R5', '2')}
+got = lambda name: {(f.GetReference(), str(p.GetNumber())) for f in fps.values() for p in f.Pads() if p.GetNetname() == name}
+chain.append((f'POWER pads = {len(exp_power)}: 24 LED VDD + C1-C25, C27, C29 + D1.K, D2.K, R2.1 (U1 is not on it)', got('POWER') == exp_power))
+chain.append((f'GND pads = {len(exp_gnd)}: 24 LED + C1-C29 + U1 GND/BAT-, J1.2, U26, Q1.S, R3, R5', got('GND') == exp_gnd))
+chain.append(('VUSB = U1.VUSB, D2.A, Q1.G, R5.1', got('VUSB') == {('U1', 'VUSB'), ('D2', '2'), ('Q1', '1'), ('R5', '1')}))
+chain.append(('VBAT = J1.1, U1.BAT+, U26.IN, L1.1, R4.1, C26.1, C28.1', got('VBAT') == {('J1', '1'), ('U1', 'BAT_P'), ('U26', '5'), ('L1', '1'), ('R4', '1'), ('C26', '1'), ('C28', '1')}))
+chain.append(('SW = U26.SW, L1.2, D1.A', got('SW') == {('U26', '1'), ('L1', '2'), ('D1', '2')}))
+chain.append(('BOOST_EN = U26.EN, Q1.D, R4.2', got('BOOST_EN') == {('U26', '4'), ('Q1', '3'), ('R4', '2')}))
+chain.append(('FB = U26.FB, R2.2, R3.1', got('FB') == {('U26', '3'), ('R2', '2'), ('R3', '1')}))
+def ohm(v):
+    v = v.strip().lower().replace('k', 'e3').replace('m', 'e6')
+    return float(v)
+vout = 0.6 * (1 + ohm(fps['R2'].GetValue()) / ohm(fps['R3'].GetValue()))
+chain.append((f'feedback divider R2 {fps["R2"].GetValue()} / R3 {fps["R3"].GetValue()}: output = 0.6 V x (1 + R2/R3) = {vout:.2f} V', abs(vout - 5.0) < 0.05))
+chain.append(('every footprint value matches the schematic part (U26 MT3608B, L1 10uH, D1/D2 1N5819HW, Q1 2N7002)', fps['U26'].GetValue() == 'MT3608B' and fps['L1'].GetValue() == '10uH' and fps['D1'].GetValue() == fps['D2'].GetValue() == '1N5819HW' and fps['Q1'].GetValue() == '2N7002'))
+chain.append(('battery return: J1.2 and U1.BAT- are on GND (BAT- is the XIAO GND)', got('GND') >= {('J1', '2'), ('U1', 'BAT_N')}))
+chain.append(('U1 is not connected to POWER (LED power only through D1 / D2)', all(p.GetNetname() != 'POWER' for p in fps['U1'].Pads())))
+out['boost_vout_nominal'] = vout
+vlo = 0.588 * (1 + 0.99 * ohm(fps['R2'].GetValue()) / (1.01 * ohm(fps['R3'].GetValue()))); vhi = 0.612 * (1 + 1.01 * ohm(fps['R2'].GetValue()) / (0.99 * ohm(fps['R3'].GetValue())))
+out['boost_vout_range'] = [vlo, vhi]
 out['netlist_walk'] = [{'check': k, 'ok': bool(v)} for k, v in chain]
 
 # ------------------------------------------------------------------ copper resistor network
@@ -124,6 +142,9 @@ def build(net):
                 jj = lst[j][2]
                 if jj != i and (d[j] < TOL_END or i in via_ids or jj in via_ids): edges.append((i, jj, 1e-6, 0.0))
     return nodes, edges, pad_nodes
+LAST_BRANCH = {}
+
+
 def solve(net, source, sinks, current):
     """DC solution: `source` node is held at 0 V and every sink draws `current` through it. Returns per-sink drop (V)."""
     nodes, edges, pad_nodes = build(net)
@@ -134,9 +155,10 @@ def solve(net, source, sinks, current):
         G[a, a] += g; G[c, c] += g; G[a, c] -= g; G[c, a] -= g
     src = pad_nodes[source][0]
     Iv = np.zeros(n)
+    cur = (lambda x: current[x]) if isinstance(current, dict) else (lambda x: current)
     for s in sinks:
-        Iv[pad_nodes[s][0]] -= current
-    Iv[src] += current * len(sinks)
+        Iv[pad_nodes[s][0]] -= cur(s)
+    Iv[src] += sum(cur(s) for s in sinks)
     keep = [i for i in range(n) if i != src]
     # connected component of the source only
     comp = {src}; adj = collections.defaultdict(list)
@@ -154,6 +176,18 @@ def solve(net, source, sinks, current):
     idx = {i: k for k, i in enumerate(keep)}
     Gr = G[np.ix_(keep, keep)]
     V = np.linalg.solve(Gr, Iv[keep])
+    # largest branch current and the width of that copper (resistance = 0.49 mOhm/sq x length / width)
+    Vfull = np.zeros(n)
+    for i, k in idx.items():
+        Vfull[i] = V[k]
+    worst = (0.0, None)
+    for a, c, r, ln in edges:
+        if a in comp and c in comp and ln > 0.05:
+            cur_ = abs(Vfull[a] - Vfull[c]) / r
+            if cur_ > worst[0]:
+                worst = (cur_, RHO_SQ * ln / r)
+    global LAST_BRANCH
+    LAST_BRANCH = {'I_max_A': worst[0], 'width_mm': worst[1]}
     drops = {}
     for s in sinks:
         node = pad_nodes[s][0]
@@ -176,23 +210,37 @@ def path_len(net, a, c):
     return None
 
 power = {}
+IIN = {'3.7 V cell': 0.58, '3.0 V cell': 0.73}          # input current of the boost at 368 mA / 5 V, 85 % efficiency
 for label, I in (('15.35 mA per LED (datasheet typ., all white; 368 mA total)', 0.01535), ('30 mA per LED (2x margin; 737 mA total)', 0.030)):
-    dp, comp_p, n_p = solve('POWER', ('U1', 'VUSB'), [(u, '2') for u in leds], I)
-    dg, comp_g, n_g = solve('GND', ('U1', 'GND'), [(u, '3') for u in leds], I)
-    worst = max(leds, key=lambda u: (dp[(u, '2')] or 0) + (dg[(u, '3')] or 0))
-    power[label] = {'I_led_mA': I * 1e3, 'I_total_mA': I * 24e3,
-                    'power_drop_max_mV': max(v for v in dp.values() if v is not None) * 1e3,
-                    'gnd_rise_max_mV': max(v for v in dg.values() if v is not None) * 1e3,
-                    'worst_led': worst,
-                    'vdd_loss_worst_mV': ((dp[(worst, '2')] or 0) + (dg[(worst, '3')] or 0)) * 1e3,
-                    'per_led_drop_mV': {u: round(((dp[(u, '2')] or 0) + (dg[(u, '3')] or 0)) * 1e3, 2) for u in leds},
-                    'all_connected': all(v is not None for v in dp.values()) and all(v is not None for v in dg.values())}
+    case = {'I_led_mA': I * 1e3, 'I_total_mA': I * 24e3}
+    for mode, psrc, gsrc in (('battery', ('D1', '1'), ('U26', '2')), ('usb', ('D2', '1'), ('U1', 'GND'))):
+        dp, _, _ = solve('POWER', psrc, [(u, '2') for u in leds], I)
+        dg, _, _ = solve('GND', gsrc, [(u, '3') for u in leds], I)
+        loss = {u: ((dp[(u, '2')] or 0) + (dg[(u, '3')] or 0)) for u in leds}
+        w = max(loss, key=loss.get)
+        case[mode] = {'power_drop_max_mV': max(v for v in dp.values() if v is not None) * 1e3, 'gnd_rise_max_mV': max(v for v in dg.values() if v is not None) * 1e3,
+                      'worst_led': w, 'vdd_loss_worst_mV': loss[w] * 1e3, 'per_led_drop_mV': {u: round(v * 1e3, 2) for u, v in loss.items()},
+                      'all_connected': all(v is not None for v in dp.values()) and all(v is not None for v in dg.values())}
+    power[label] = case
+# battery side of the boost: J1 -> L1 / U26 (input current), and the GND return U26 -> J1.2
+bat = {}
+for label, I in IIN.items():
+    dv, _, _ = solve('VBAT', ('J1', '1'), [('L1', '1')], I)
+    dgr, _, _ = solve('GND', ('J1', '2'), [('U26', '2')], I)
+    bat[label] = {'I_in_A': I, 'vbat_path_mV': dv[('L1', '1')] * 1e3, 'gnd_return_mV': dgr[('U26', '2')] * 1e3}
+branch = {}
+solve('POWER', ('D1', '1'), [(u, '2') for u in leds], 0.01535); branch['POWER trunk, all white (battery mode)'] = dict(LAST_BRANCH)
+solve('GND', ('U26', '2'), [(u, '3') for u in leds], 0.01535); branch['GND, LED return, all white'] = dict(LAST_BRANCH)
+solve('VBAT', ('J1', '1'), [('L1', '1')], 0.73); branch['VBAT, battery to inductor, 3.0 V cell'] = dict(LAST_BRANCH)
+solve('GND', ('J1', '2'), [('U26', '2')], 0.73); branch['GND, boost input return to the battery, 3.0 V cell'] = dict(LAST_BRANCH)
+out['branch_currents'] = branch
+out['battery_path'] = bat
 out['power'] = power
 # thinnest POWER / GND copper
 w_min = {}
-for net in ('POWER', 'GND'):
+for net in ('POWER', 'GND', 'VBAT', 'SW', 'VUSB', 'BOOST_EN', 'FB'):
     ws = [mm(t.GetWidth()) for t in b.GetTracks() if t.GetNetname() == net and t.Type() != pcb.PCB_VIA_T]
-    w_min[net] = {'min_w': min(ws), 'max_w': max(ws), 'segments': len(ws)}
+    w_min[net] = {'min_w': min(ws), 'max_w': max(ws), 'segments': len(ws), 'length_mm': sum(mm(t.GetLength()) for t in b.GetTracks() if t.GetNetname() == net and t.Type() != pcb.PCB_VIA_T)}
 out['trunk_widths'] = w_min
 # IPC-2221 external-layer ampacity for the thinnest POWER track (35 um, 10 K rise)
 w = w_min['POWER']['min_w'] / 0.0254; a_mil2 = w * 1.378
@@ -248,5 +296,5 @@ for r in cent:
 out['centroid'] = {'rows': len(cent), 'mismatch': bad[:5], 'columns': list(cent[0])}
 out['footprints'] = len(fps)
 Path(sys.argv[1]).write_text(json.dumps(out, indent=1, ensure_ascii=False, default=str), encoding='utf-8')
-print(json.dumps({k: out[k] for k in ('power', 'decoupling', 'chain_hole_webs', 'antenna_zone', 'centroid', 'trunk_widths', 'ampacity_A_10K', 'plug_clearance_each_side_mm')}, indent=1, default=str)[:6000])
+print(json.dumps({k: out[k] for k in ('battery_path', 'boost_vout_range', 'decoupling', 'trunk_widths', 'ampacity_A_10K', 'centroid')}, indent=1, default=str)[:3500])
 print([x for x in out['netlist_walk'] if not x['ok']])

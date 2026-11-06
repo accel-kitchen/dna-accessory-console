@@ -1,13 +1,13 @@
 """Stage 2 (plain python + numpy/scipy/PIL): grid router for the DNA board.
 Reads gen/_board.json, writes gen/_routes.json (tracks, vias).  Clearance-aware A* on two copper layers."""
-import json, heapq, math, sys, collections
+import json, heapq, math, sys, collections, re
 import numpy as np
 from scipy import ndimage
 from PIL import Image, ImageDraw
 RES = 0.05
 import os
 CL = float(os.environ.get('CL','0.2')); EDGE = float(os.environ.get('EDGE','0.6')); VIA_D = float(os.environ.get('VIAD','0.5')); VIA_COST = 40
-WIDTH = {'sig': float(os.environ.get('WS','0.2')), 'pwr': float(os.environ.get('WP','0.3'))}
+WIDTH = {'sig': float(os.environ.get('WS','0.2')), 'pwr': float(os.environ.get('WP','0.3')), 'hi': float(os.environ.get('WH','0.4'))}   # hi: boost input and switch node (up to ~0.8 A)
 d = json.load(open('gen/_board.json'))
 _xs=[v for a, b in d['edge'] for v in (a[0], b[0])]; _ys=[v for a, b in d['edge'] for v in (a[1], b[1])]
 OX = math.floor(min(_xs)) - 1.0; OY = math.floor(min(_ys)) - 1.0
@@ -81,6 +81,13 @@ for p in pads:
         if p[k]:
             own[L][sl] = p['nid']; padcells[sl] = True
 via_block = np.zeros((H, W), bool)
+# rule areas of the footprints (XIAO: no copper / vias around its test pads): tracks and vias keep out
+for k in d.get('keepouts', []):
+    for L in k['layers']:
+        if k['tracks']:
+            own[L][box_slice(k['box'])] = 9999
+    if k['vias']:
+        via_block[box_slice([k['box'][0] - VIA_D / 2, k['box'][1] - VIA_D / 2, k['box'][2] + VIA_D / 2, k['box'][3] + VIA_D / 2])] = True
 
 
 def disk_offsets(r):
@@ -110,7 +117,7 @@ def make_stubs():
     for name in list(nets):
         newlist = []
         for p in nets[name]:
-            if not p['ref'].startswith('U') or p['ref'] == 'U1':
+            if not re.match(r'U([2-9]|1\d|2[0-5])$', p['ref']):          # stubs and vias only for the 24 LEDs
                 newlist.append(p); continue
             cxm = round((p['box'][0] + p['box'][2]) / 2, 3); cym = (p['box'][1] + p['box'][3]) / 2
             ref = [q for q in pads if q['ref'] == p['ref']]
@@ -142,7 +149,9 @@ def make_stubs():
 
 
 def klass(n):
-    return 'pwr' if n in ('POWER', 'GND') else 'sig'
+    if n in ('VBAT', 'SW'):
+        return 'hi'
+    return 'pwr' if n in ('POWER', 'GND', 'VUSB') else 'sig'
 
 
 def layers_of(p):
@@ -267,10 +276,10 @@ def simplify(L, pts, allowed):
 if __name__ == '__main__':
     def span(ps):
         return max(p['y'] for p in ps) - min(p['y'] for p in ps)
-    names = [n for n in nets if n not in ('POWER', 'GND')]
+    names = [n for n in nets if n not in ('POWER', 'GND', 'VBAT', 'SW')]
     names.sort(key=lambda n: (span(nets[n]) > 8, span(nets[n])))
     make_stubs()
-    names = ['POWER', 'GND'] + names
+    names = ['VBAT', 'SW', 'POWER', 'GND'] + [n for n in names]
     if os.environ.get('SEED'):
         import random; random.seed(int(os.environ['SEED'])); random.shuffle(names)
     prio = [n for n in os.environ.get('PRIO', '').split('|') if n in names]

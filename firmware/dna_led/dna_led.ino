@@ -2,13 +2,12 @@
 // Chain order = reference order: pixel 0 = U2, pixel 1 = U3, ... pixel 23 = U25. Pair k = pixels 2k and 2k+1.
 // Needs the "Adafruit NeoPixel" library and the Seeed nRF52 board package (use the D6 macro, not a bare 6).
 //
-// LED power comes only from USB (VUSB). On battery alone the LEDs are unpowered, so the data pin must
-// stay high-impedance (R1 only limits the current into the unpowered DIN protection diode).
-// Not compiled or flashed in this session: confirm that VBUSDETECT is available in your board core.
+// LED power: USB (5 V through D2) when a cable is present, otherwise the battery through the MT3608B boost converter
+// (5.0 V); the hardware switches between them. Not compiled or flashed in this session.
 //
 // Bring-up order (review item 06): 1) walk one pixel at low brightness to prove all 24 stages,
 // 2) light the 12 pairs two at a time, 3) only then raise BRIGHTNESS. Measure current and the
-// farthest LED's VDD before going above ~25 % (full white is about 0.37 A @ 5 V; USB power only).
+// farthest LED's VDD before going above ~25 % (full white is about 0.37 A @ 5 V: USB, or about 0.7 A from a 3.0 V cell via the boost).
 #include <Adafruit_NeoPixel.h>
 #include <nrf.h>
 
@@ -16,9 +15,6 @@
 #define N_LEDS 24
 #define BRIGHTNESS 40            // 0..255, limit used for every colour; raise only after measuring
 
-static bool usbPowered() {
-  return (NRF_POWER->USBREGSTATUS & POWER_USBREGSTATUS_VBUSDETECT_Msk) != 0;
-}
 
 Adafruit_NeoPixel strip(N_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);  // GRB order, 800 kHz (datasheet p.7 / p.11)
 
@@ -48,13 +44,9 @@ void showPairs(int count) {   // lights the first `count` pairs
 }
 
 void setup() {
-  while (!usbPowered()) {      // battery only: leave D6 floating until USB 5 V is present
-    pinMode(LED_PIN, INPUT);
-    delay(200);
-  }
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
-  delay(100);                  // let the LED supply settle before any data is sent
+  delay(100);                  // let the LED supply settle (USB, or the battery boost converter starting) before any data is sent
   strip.begin();
   strip.clear();
   strip.show();
@@ -71,11 +63,6 @@ void setup() {
 }
 
 void loop() {
-  if (!usbPowered()) {         // USB removed: stop driving the data line
-    pinMode(LED_PIN, INPUT);
-    delay(200);
-    NVIC_SystemReset();        // restart cleanly when USB returns
-  }
   // 2) grow the sequence pair by pair, hold, then restart.
   for (int k = 1; k <= 12; k++) {
     showPairs(k);

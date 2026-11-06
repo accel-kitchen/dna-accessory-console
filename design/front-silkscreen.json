@@ -3,7 +3,7 @@
     "type": "text",
     "text": "-",
     "xy": [
-      107.0,
+      106.1,
       141.5
     ],
     "size": 1.1
@@ -12,62 +12,17 @@
     "type": "text",
     "text": "+",
     "xy": [
-      93.0,
+      93.9,
       141.5
     ],
     "size": 1.1
   },
   {
     "type": "text",
-    "text": "WATSON CRICK FRANKLIN 1953",
-    "xy": [
-      100.0,
-      136.6
-    ],
-    "size": 0.8
-  },
-  {
-    "type": "text",
-    "text": "2 TURNS / 12 BASE PAIRS",
-    "xy": [
-      100.0,
-      134.6
-    ],
-    "size": 0.8
-  },
-  {
-    "type": "text",
-    "text": "A=T 2 BONDS  G-C 3 BONDS",
-    "xy": [
-      100.0,
-      132.5
-    ],
-    "size": 0.8
-  },
-  {
-    "type": "text",
-    "text": "STOP",
-    "xy": [
-      105.2,
-      130.4
-    ],
-    "size": 0.8
-  },
-  {
-    "type": "text",
-    "text": "START",
-    "xy": [
-      94.8,
-      130.4
-    ],
-    "size": 0.8
-  },
-  {
-    "type": "text",
     "text": "3'-TAC CGT AGC ATT-5'",
     "xy": [
       100.0,
-      128.0
+      126.7
     ],
     "size": 1.0
   },
@@ -76,16 +31,16 @@
     "text": "5'-ATG GCA TCG TAA-3'",
     "xy": [
       100.0,
-      125.8
+      124.5
     ],
     "size": 1.0
   },
   {
     "type": "text",
-    "text": "REV 5  -  5.5 mm / PAIR",
+    "text": "REV 6  -  5.5 mm / PAIR",
     "xy": [
       100.0,
-      122.4
+      122.1
     ],
     "size": 0.8
   },
@@ -94,7 +49,7 @@
     "text": "DNA / 12 BASE PAIRS",
     "xy": [
       100.0,
-      119.8
+      119.7
     ],
     "size": 1.0
   },

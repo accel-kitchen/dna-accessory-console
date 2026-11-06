@@ -1,7 +1,8 @@
 """Rebuild PCB outline, placement and silkscreen using installed KiCad 9 pcbnew Python.
 
 Preserves footprint UUIDs, pad numbers, nets, and schematic links.
-Revision 5 starts from the routed revision-4 board (design/pre-compact-20261102): it re-places the
+Revision 5 starts from the routed revision-4 board (design/pre-compact-20261102) plus the battery power parts
+(design/boost-base, made by gen/add_boost_pcb.py): it re-places the
 LEDs and their back-side bypass capacitors on the compact helix, redraws outline and silkscreen
 (no base letters on the helix, chain holes in the collar corners) and drops all copper, which
 gen/route_prep.py -> route_board.py -> route_apply.py then routes again.
@@ -16,7 +17,7 @@ from shapely.ops import unary_union
 from shapely.prepared import prep
 ROOT=Path(__file__).resolve().parents[1]
 g=json.loads((ROOT/'design'/'dna-geometry.json').read_text())
-SOURCE=ROOT/'design'/'pre-compact-20261102'/'dna-accesories.kicad_pcb'
+SOURCE=ROOT/'design'/'boost-base'/'dna-accesories.kicad_pcb'   # revision-4 board + the battery power parts (gen/add_boost_pcb.py)
 b=pcb.LoadBoard(str(SOURCE))
 def point(xy):return pcb.VECTOR2I(round(xy[0]*1e6),round(xy[1]*1e6))
 def mm(p):return [pcb.ToMM(p.x),pcb.ToMM(p.y)]
@@ -64,6 +65,7 @@ for f in b.GetFootprints():
         r=p.GetBoundingBox();pad=box(pcb.ToMM(r.GetLeft()),pcb.ToMM(r.GetTop()),pcb.ToMM(r.GetRight()),pcb.ToMM(r.GetBottom())).buffer(.3)
         if p.IsOnLayer(pcb.F_Cu):reserved['F'].append(pad)
         if p.IsOnLayer(pcb.B_Cu):reserved['B'].append(pad)
+reserved['F'].append(box(95.0,136.8,105.0,146.3))   # J1 body outline silk
 def fits(side,geom,margin=.12):
     if not FREE.contains(geom):return False
     return all(geom.distance(r)>=margin for r in reserved[side])
@@ -177,15 +179,24 @@ for side in ('F','B'):
     ribbons(side)
 
 # Front collar: title, the encoded sequence, legend and polarity of the battery connector.
-put_text('F','DNA / 12 BASE PAIRS',(100,119.8),1.0)
-put_text('F',f'REV 5  -  {PD:g} mm / PAIR',(100,122.4),.8)
-put_text('F',"5'-"+' '.join(SEQ[k:k+3] for k in range(0,12,3))+"-3'",(100,125.8),1.0,.15)
-put_text('F',"3'-"+' '.join(''.join(PAIR[c] for c in SEQ[k:k+3]) for k in range(0,12,3))+"-5'",(100,128.0),1.0,.15)
-put_text('F','START',(94.8,130.4),.8);put_text('F','STOP',(105.2,130.4),.8)
-put_text('F','A=T 2 BONDS  G-C 3 BONDS',(100,132.5),.8)
-put_text('F','2 TURNS / 12 BASE PAIRS',(100,134.6),.8)
-put_text('F','WATSON CRICK FRANKLIN 1953',(100,136.6),.8)
-put_text('F','+',(93.0,141.5),1.1);put_text('F','-',(107.0,141.5),1.1)
+put_text('F','DNA / 12 BASE PAIRS',(100,119.7),1.0)
+put_text('F',f'REV 6  -  {PD:g} mm / PAIR',(100,122.1),.8)
+put_text('F',"5'-"+' '.join(SEQ[k:k+3] for k in range(0,12,3))+"-3'",(100,124.5),1.0,.15)
+put_text('F',"3'-"+' '.join(''.join(PAIR[c] for c in SEQ[k:k+3]) for k in range(0,12,3))+"-5'",(100,126.7),1.0,.15)
+def try_put(side,value,center,size,thick=.12,radius=7.0):
+    """Silk mark that must sit near `center`: the first free spot on a 0.3 mm grid, nearest first."""
+    cands=sorted(((center[0]+dx*.3,center[1]+dy*.3) for dx in range(-int(radius/.3),int(radius/.3)+1) for dy in range(-int(radius/.3),int(radius/.3)+1)),
+                 key=lambda c:math.dist(c,center))
+    for xy in cands:
+        if math.dist(xy,center)>radius:break
+        t=text(value,xy,size,SIDES[side],thick=thick);bb=text_box(t)
+        if FREE.contains(bb) and all(bb.distance(r)>=.12 for r in reserved[side]):
+            reserve(side,bb.buffer(.1));return t
+        b.Remove(t)
+    raise AssertionError(f'no free spot for silk {value!r} near {center}')
+# The battery power parts take the lower half of the front collar: START/STOP and the three legend lines are gone.
+# '+' and '-' mark the J1 pads (pad 1 = BAT+ at x=99, pad 2 = BAT- at x=101).
+try_put('F','+',(96.9,141.5),1.1);try_put('F','-',(103.1,141.5),1.1)
 # Back collar: orientation marks for the XIAO and the USB-C mouth.
 put_text('B','DNA / 12 BASE PAIRS',(100,119.6),.9)
 put_text('B','USB-C',(100,144.85),.8,must=False)

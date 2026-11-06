@@ -1,13 +1,59 @@
 {
     "$schema": "https://schemas.kicad.org/erc.v1.json",
     "coordinate_units": "mm",
-    "date": "2026-11-06T19:33:10+0900",
+    "date": "2026-11-06T21:39:20+0900",
     "kicad_version": "9.0.4",
     "sheets": [
         {
             "path": "/",
             "uuid_path": "/39a00d90-ab18-44df-86d9-cc83da3529d4",
             "violations": [
+                {
+                    "description": "Pins of type Bidirectional and Power output are connected",
+                    "items": [
+                        {
+                            "description": "Symbol U1 Pin BAT_N [BAT-, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.1778,
+                                "y": -0.1397
+                            },
+                            "uuid": "a29f540f-f136-4b64-afbf-30e0cf3ad688"
+                        },
+                        {
+                            "description": "Symbol U1 Pin GND [GND, Power output, Line]",
+                            "pos": {
+                                "x": 0.1778,
+                                "y": -0.1143
+                            },
+                            "uuid": "e8b165de-8cdc-4d4f-9ce0-8746a493c1a1"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
+                {
+                    "description": "Pins of type Bidirectional and Power output are connected",
+                    "items": [
+                        {
+                            "description": "Symbol U1 Pin BAT_P [BAT+, Bidirectional, Line]",
+                            "pos": {
+                                "x": 0.1778,
+                                "y": -0.4445
+                            },
+                            "uuid": "b817c813-f11d-400a-8dce-618a163b275b"
+                        },
+                        {
+                            "description": "Symbol #FLG02 Pin 1 [Power output, Line]",
+                            "pos": {
+                                "x": 2.8575,
+                                "y": 1.7526
+                            },
+                            "uuid": "2af90c44-8bf5-4a65-80b0-af69729a3d0c"
+                        }
+                    ],
+                    "severity": "warning",
+                    "type": "pin_to_pin"
+                },
                 {
                     "description": "Global label not connected anywhere else in the schematic",
                     "items": [

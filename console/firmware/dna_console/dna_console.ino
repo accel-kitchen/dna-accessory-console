@@ -9,13 +9,15 @@
 // Needs the "Adafruit NeoPixel" library and the Seeed nRF52 board package (use the D6 macro, not a bare 6).
 // The saved-settings feature uses InternalFileSystem from the same core; set DNA_USE_FS to 0 to build without it.
 //
-// LED power comes only from USB (VUSB). On battery alone the LEDs are unpowered, so the data pin must
-// stay high-impedance (R1 only limits the current into the unpowered DIN protection diode).
+// LED power: USB (5 V through D2) when a cable is present, otherwise the battery through the MT3608B boost converter
+// (5.0 V). The hardware switches between them (Q1 turns the boost off while USB is present), so this sketch does not
+// have to know which one is active. Full white is about 0.37 A at 5 V = about 0.7 A from a 3.0 V cell: keep
+// MAX_BRIGHTNESS low on a small battery.
 // NOT compiled or flashed in the session that wrote it: build it once and check the points in README.md.
 //
 // Bring-up order (review item 06): 1) the start-up walk proves all 24 stages at low brightness,
 // 2) check current and the farthest LED's VDD before raising MAX_BRIGHTNESS above ~25 % of 255
-//    (full white is about 0.37 A @ 5 V; USB power only).
+//    (full white is about 0.37 A @ 5 V: USB or about 0.7 A from a 3.0 V cell through the boost converter).
 #include <Adafruit_NeoPixel.h>
 #include <nrf.h>
 #include <ctype.h>
@@ -50,9 +52,6 @@ static uint8_t brightness = BRIGHTNESS;
 static uint8_t fx = 1;                          // 0 static, 1 grow, 2 breathe, 3 wave, 4 codon scan
 static uint8_t speedSel = 5;                    // 1 (slow) .. 10 (fast)
 
-static bool usbPowered() {
-  return (NRF_POWER->USBREGSTATUS & POWER_USBREGSTATUS_VBUSDETECT_Msk) != 0;
-}
 
 // ---- defaults: 5'-ATG GCA TCG TAA-3' as drawn on the silkscreen; strand B is the complement ----
 static const char DEFAULT_SEQ[] = "ATGGCATCGTAA";
@@ -340,13 +339,9 @@ static void pollSerial() {
 // ---- Arduino entry points ----------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);        // never wait for a host: the board must also run standalone on a charger
-  while (!usbPowered()) {      // battery only: leave D6 floating until USB 5 V is present
-    pinMode(LED_PIN, INPUT);
-    delay(200);
-  }
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
-  delay(100);                  // let the LED supply settle before any data is sent
+  delay(100);                  // let the LED supply settle (USB, or the battery boost converter starting) before any data is sent
   strip.begin();
   strip.clear();
   strip.show();
@@ -360,11 +355,6 @@ void setup() {
 }
 
 void loop() {
-  if (!usbPowered()) {         // USB removed: stop driving the data line
-    pinMode(LED_PIN, INPUT);
-    delay(200);
-    NVIC_SystemReset();        // restart cleanly when USB returns
-  }
   pollSerial();
   static uint32_t last = 0;
   uint32_t now = millis();

@@ -42,6 +42,36 @@ CAT = {
         pkg='SMD, side entry', lcsc='C160352',
         link='https://www.lcsc.com/product-detail/image/B2B-PH-SM4-TB-LF-SN_C160352.html',
         alt='', note='Battery connector. Pad 1 = BAT+ (left, "+" on the silkscreen), pad 2 = BAT-. Datasheet: jst-mfg.com ePH.pdf'),
+    ('MT3608B',): dict(
+        mpn='MT3608B', mfr='Aerosemi', desc='1.2 MHz step-up converter, 2.5-24 V in, 4 A switch, adjustable output, SOT-23-6',
+        pkg='SOT-23-6', lcsc='', link='https://www.lcsc.com/search?q=MT3608B',
+        alt='MT3608 (same SOT-23-6 pinout: 1 SW, 2 GND, 3 FB, 4 EN, 5 VIN, 6 NC)',
+        note='Pin 1 = SW (see detail E). Output 5.0 V = 0.6 V x (1 + 110k/15k). Battery to LED boost; switched off by Q1 while USB is present.'),
+    ('10uH',): dict(
+        mpn='SRN4018TA-100M', mfr='Bourns', desc='Shielded power inductor 10 uH, Irms 1.2 A, Isat 1.3 A, DCR 0.15 ohm max, 4.0 x 4.0 x 1.8 mm',
+        pkg='4.0 x 4.0 mm SMD', lcsc='', link='https://www.digikey.com/en/products/result?keywords=SRN4018TA-100M',
+        alt='Sunlord SWPA4020S100MT (LCSC C82398; 10 uH, Irms 0.9 A, Isat 1.6 A, 4 x 4 x 2 mm): check its land pattern before substituting',
+        note='Non-polarized. Boost inductor: carries up to ~0.8 A at full white on a 3.0 V cell.'),
+    ('1N5819HW',): dict(
+        mpn='1N5819HW-7-F', mfr='Diodes Incorporated', desc='Schottky diode 40 V 1 A, SOD-123',
+        pkg='SOD-123', lcsc='C82544', link='https://lcsc.com/product-detail/Schottky-Diodes_Diodes-Incorporated-1N5819HW-7-F_C82544.html',
+        alt='Any SOD-123 Schottky, 40 V, 1 A, Vf <= 0.5 V at 1 A', note='Polarized: cathode (bar) at pad 1. D1 = boost rectifier, D2 = USB to LED power (blocks battery current into USB).'),
+    ('2N7002',): dict(
+        mpn='2N7002-7-F', mfr='Diodes Incorporated', desc='N-channel MOSFET 60 V 210 mA, SOT-23',
+        pkg='SOT-23', lcsc='C85049', link='https://www.lcsc.com/product-detail/C85049.html',
+        alt='2N7002K-7 (LCSC C85047)', note='Pin 1 = gate, 2 = source, 3 = drain. Pulls the boost EN pin low while USB is present.'),
+    ('110k',): dict(
+        mpn='RC0402FR-07110KL', mfr='Yageo', desc='Thick-film resistor 110 kohm 1 % 1/16 W 0402',
+        pkg='0402 (1005 metric)', lcsc='', link='https://www.lcsc.com/search?q=RC0402FR-07110KL', alt='Any 0402 110 kohm 1 %',
+        note='Boost feedback divider (top): 5.0 V output with R3 = 15 kohm.'),
+    ('15k',): dict(
+        mpn='RC0402FR-0715KL', mfr='Yageo', desc='Thick-film resistor 15 kohm 1 % 1/16 W 0402',
+        pkg='0402 (1005 metric)', lcsc='', link='https://www.lcsc.com/search?q=RC0402FR-0715KL', alt='Any 0402 15 kohm 1 %',
+        note='Boost feedback divider (bottom).'),
+    ('100k',): dict(
+        mpn='RC0402FR-07100KL', mfr='Yageo', desc='Thick-film resistor 100 kohm 1 % 1/16 W 0402',
+        pkg='0402 (1005 metric)', lcsc='', link='https://www.lcsc.com/search?q=RC0402FR-07100KL', alt='Any 0402 100 kohm',
+        note='R4: boost EN pull-up to the battery. R5: gate pull-down of Q1.'),
     ('102010448',): dict(
         mpn='102010448', mfr='Seeed Studio', desc='Seeed Studio XIAO nRF52840 (XIAO BLE), plain version without pin headers',
         pkg='21 x 17.8 mm castellated SMD module', lcsc='',
@@ -62,9 +92,9 @@ for key, ps in groups.items():
     refs = sorted((p['ref'] for p in ps), key=natkey)
     sides = sorted({p['side'] for p in ps})
     lines.append(dict(refs=refs, qty=len(refs), sides='/'.join(sides), value=key[0], fp=ps[0]['fp'], **c))
-order = {'102010448': 0, 'B2B-PH-SM4-TB': 1, 'XL-1010RGBC-WS2812B': 2, '10uF': 3, '100nF': 4, '100': 5}
+order = {'102010448': 0, 'B2B-PH-SM4-TB': 1, 'XL-1010RGBC-WS2812B': 2, 'MT3608B': 3, '10uH': 4, '1N5819HW': 5, '2N7002': 6, '10uF': 7, '100nF': 8, '100': 9, '110k': 10, '15k': 11, '100k': 12}
 lines.sort(key=lambda l: order[l['value']])
-assert sum(l['qty'] for l in lines) == len(parts) == 52
+assert sum(l['qty'] for l in lines) == len(parts) == 65
 
 OUT.mkdir(exist_ok=True)
 
@@ -111,7 +141,7 @@ run('pcb', 'export', 'pos', '--format', 'csv', '--units', 'mm', '--side', 'both'
 run('pcb', 'export', 'pos', '--format', 'ascii', '--units', 'mm', '--side', 'both', '--smd-only', '-o', str(OUT / 'centroid.pos'), PCB)
 # Fusion-style column names
 rows = list(csv.DictReader(open(OUT / 'centroid_kicad.csv', encoding='utf-8')))
-assert len(rows) == 52, len(rows)
+assert len(rows) == 65, len(rows)
 with open(OUT / 'centroid.csv', 'w', newline='', encoding='utf-8') as f:
     cw = csv.writer(f)
     cw.writerow(['Designator', 'Val', 'Package', 'Mid X', 'Mid Y', 'Rotation', 'Layer'])
@@ -188,7 +218,7 @@ def page(side, scale=3.5, detail=None):
             svg.append(f'<text x="{cx - 12:.1f}" y="{cy - 14:.1f}" font-size="5" fill="#a00">J1 B2B-PH-SM4-TB(LF)(SN)</text>')
             svg.append(f'<text x="{cx - 12:.1f}" y="{cy - 8:.1f}" font-size="4" fill="#a00">pad1 = BAT+ (marked +)  pad2 = BAT-</text>')
         else:                                                  # passives (no polarity)
-            if p['ref'] in ('R1', 'C25'):
+            if not re.match(r'C([1-9]|1\d|2[0-4])$', p['ref']):
                 svg.append(f'<text x="{cx - 2:.1f}" y="{cy - 3:.1f}" font-size="4" fill="#060">{lab}</text>')
             else:
                 svg.append(f'<text x="{cx + (3.2 if p["x"] > 100 else -3.2 - 7):.2f}" y="{cy + 3.4:.2f}" font-size="3" fill="#060">{lab}</text>')
@@ -246,6 +276,10 @@ for title, refs, sc, notes in (
     ('Detail D - XIAO nRF52840 U1, R1 100R and C25 10uF, bottom', ['U1', 'R1', 'C25'], 7,
      ['U1: castellated SMD module (Seeed SKU 102010448) placed on the BOTTOM; USB-C connector faces the bottom board edge.',
       'R1 (100 ohm 0402) and C25 (10 uF 0805) are non-polarized.']),
+    ('Detail E - battery boost U26 (MT3608B), L1, D1, D2, Q1, top', ['U26', 'L1', 'D1', 'D2', 'Q1'], 14,
+     ['U26 SOT-23-6: pad 1 = SW is on the side with three pads 1-2-3 (pad numbers are drawn). Pins: 1 SW, 2 GND, 3 FB, 4 EN, 5 VIN, 6 NC.',
+      'D1 and D2: cathode (bar on the part) at pad 1. Q1 SOT-23: 1 gate, 2 source, 3 drain. L1 non-polarized.',
+      'C26-C29 (10 uF 0805) and R2-R5 (0402) are non-polarized; C25..C29 are all the 10 uF part.']),
 ):
     s, W, H = detail_page(title, refs, sc, notes)
     to_pdf_page(doc, s, W, H)

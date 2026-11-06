@@ -91,6 +91,22 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 `comparison-rev4-rev5.html`（1ファイルで開ける）：改訂4（`pre-compact-20261102/`）と現在の基板を、同縮尺の3D画像・外形の重ね図・数値表で比較。
 再生成：`gen/compare_stats.py`（KiCad付属Python）→ `gen/make_comparison.py`。
 
-## 改訂5のレビュー（2026-11-06）
+## 改訂5のレビュー（2026-11-06、`review-rev5.html`）
 
 `../review.html`。DRC・ERCに加え、厳しい規則のDRCで間隔を実測、基板のトラックから電源の電圧降下を計算、ネット連鎖と部品位置を照合、3D干渉と製造データ（ガーバー・ドリル・BOM・実装座標）を確認。結論：配線・形状・製造データに誤りなし。未解決は「電池単独でLEDが点灯しない」（設計判断）。吊り穴まわりの肉厚1.0 mm、ビア環0.13 mmは確認をすすめる。
+
+## 改訂6：電池でも LED が光る（2026-11-06）
+
+- 改訂5の未解決点（LED の電源が USB の 5 V だけ）に対し、昇圧と USB／電池の自動切り替えを追加。
+  電池（VBAT）→ L1 → MT3608B（U26）→ D1 → POWER（5.0 V）。USB があるときは USB → D2 → POWER、Q1 が U26 の EN を落として昇圧を止める。
+  出力電圧は 0.6 V × (1 + R2/R3) = 5.0 V（110 kΩ／15 kΩ、データシート Fig.1 の値）。部品 13 点（U26、L1、D1、D2、Q1、C26〜C29、R2〜R5）は襟の表面。
+  電池のマイナス（J1.2・XIAO の BAT−）は GND に直結（Seeed 回路図 v1.1 で BAT− は GND）。
+- 回路図：`gen/add_boost_sch.py`（1 回だけ実行。起点は `pre-boost-20261106/`）。基板：`gen/place_boost.py`（配置の探索、結果は `gen/_boost_place.json`）
+  → `gen/add_boost_pcb.py`（`boost-base/` を作る）→ `gen/rebuild_dna_board.py`（起点は `boost-base/`）→ `gen/route_prep.py` → `gen/route_search.py`（シードを変えて並列）→ `gen/route_apply.py`。
+  ルーターは、VBAT・SW を 0.4 mm、電源・GND・VUSB を 0.2 mm、信号を 0.15 mm で引き、XIAO のフットプリントの禁止領域（テストパッド周り）を避ける。
+- シルク：襟の表面は昇圧部品の場所をあけるため、START/STOP と凡例 3 行を削除。REV は「REV 6」。
+- 検証：KiCad 9.0.4 の DRC 違反 0・未接続 0・回路図差異 0。ERC は警告 3 件（ラベル 1、BAT−／BAT＋の端子の型の組み合わせ 2）。銅箔間隔の最小 0.143 mm、銅箔〜外形 0.560 mm。3D 干渉 0。
+- ファームウェア（`../console/firmware/`、`../firmware/`）：USB 給電がないときに D6 を浮かせる処理を削除。
+- 発注データ（`../fusion/`）は 65 点・13 品番で再生成。実装図に昇圧部の拡大図（Detail E）を追加。
+- 実機での昇圧回路の動作は未確認。レビューは `../review.html`、改訂4との比較は `comparison-rev4-rev5.html`。
+- 更新前の状態：`pre-boost-20261106/`。

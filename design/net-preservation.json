@@ -37,6 +37,13 @@
         "4": "Net-(U6-DOUT)"
       }
     },
+    "R3": {
+      "uuid": "21610b81-7028-4d37-950f-f2f43b525ea2",
+      "pads": {
+        "1": "FB",
+        "2": "GND"
+      }
+    },
     "U8": {
       "uuid": "2624ebbb-2c10-46e1-b062-c290042f38de",
       "pads": {
@@ -49,10 +56,17 @@
     "J1": {
       "uuid": "299b4af4-150a-4190-bfc2-7c632543d722",
       "pads": {
-        "1": "Net-(U1-BAT+)",
-        "2": "Net-(U1-BAT-)",
+        "1": "VBAT",
+        "2": "GND",
         "S1": "",
         "S2": ""
+      }
+    },
+    "R4": {
+      "uuid": "3140cd6c-ec4b-4c2d-b67e-5ce806c0abab",
+      "pads": {
+        "1": "VBAT",
+        "2": "BOOST_EN"
       }
     },
     "U25": {
@@ -62,6 +76,27 @@
         "2": "POWER",
         "3": "GND",
         "4": "Net-(U24-DOUT)"
+      }
+    },
+    "C27": {
+      "uuid": "3d5da29e-2b88-418b-b1a6-cb97f87790ee",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "D2": {
+      "uuid": "3e055981-7414-4468-abc6-0eaf871b9893",
+      "pads": {
+        "1": "POWER",
+        "2": "VUSB"
+      }
+    },
+    "C26": {
+      "uuid": "4202042f-e625-41aa-b908-59d82b5fa061",
+      "pads": {
+        "1": "VBAT",
+        "2": "GND"
       }
     },
     "U11": {
@@ -91,6 +126,13 @@
         "4": "Net-(U17-DOUT)"
       }
     },
+    "D1": {
+      "uuid": "48629efc-4101-45f6-9c00-b55e595465f9",
+      "pads": {
+        "1": "POWER",
+        "2": "SW"
+      }
+    },
     "U5": {
       "uuid": "4abe0604-0f98-4035-b37b-9e0bb224e94b",
       "pads": {
@@ -100,6 +142,17 @@
         "4": "Net-(U4-DOUT)"
       }
     },
+    "U26": {
+      "uuid": "4ac70115-0860-4ec6-bda8-1fbdb56d7411",
+      "pads": {
+        "1": "SW",
+        "2": "GND",
+        "3": "FB",
+        "4": "BOOST_EN",
+        "5": "VBAT",
+        "6": "unconnected-(U26-NC-Pad6)"
+      }
+    },
     "U23": {
       "uuid": "51304ec4-2d59-41f9-ba3e-10abfd816a69",
       "pads": {
@@ -107,6 +160,20 @@
         "2": "POWER",
         "3": "GND",
         "4": "Net-(U22-DOUT)"
+      }
+    },
+    "R5": {
+      "uuid": "627c766b-0d4b-45f8-a60e-448f4e2a4abd",
+      "pads": {
+        "1": "VUSB",
+        "2": "GND"
+      }
+    },
+    "L1": {
+      "uuid": "808bc5b1-32cf-430c-bd21-c9afec81209a",
+      "pads": {
+        "1": "VBAT",
+        "2": "SW"
       }
     },
     "U9": {
@@ -179,6 +246,35 @@
         "2": "POWER",
         "3": "GND",
         "4": "Net-(U15-DOUT)"
+      }
+    },
+    "C29": {
+      "uuid": "c8a6212c-4407-4d10-92f3-0415ae6d8940",
+      "pads": {
+        "1": "POWER",
+        "2": "GND"
+      }
+    },
+    "C28": {
+      "uuid": "d2892972-3823-4902-9e1d-251688cce0d3",
+      "pads": {
+        "1": "VBAT",
+        "2": "GND"
+      }
+    },
+    "Q1": {
+      "uuid": "d338de80-9e56-4716-aefd-4ee9d7421722",
+      "pads": {
+        "1": "VUSB",
+        "2": "GND",
+        "3": "BOOST_EN"
+      }
+    },
+    "R2": {
+      "uuid": "db265b42-cff1-416e-9d7d-8b7f70004d55",
+      "pads": {
+        "1": "POWER",
+        "2": "FB"
       }
     },
     "U2": {
@@ -367,8 +463,8 @@
         "8": "unconnected-(U1-D8{slash}SCK-Pad8)",
         "9": "unconnected-(U1-D9{slash}MISO-Pad9)",
         "10": "unconnected-(U1-D10{slash}MOSI-Pad10)",
-        "BAT_N": "Net-(U1-BAT-)",
-        "BAT_P": "Net-(U1-BAT+)",
+        "BAT_N": "GND",
+        "BAT_P": "VBAT",
         "GND": "GND",
         "NFC1": "unconnected-(U1-PadNFC1)",
         "NFC2": "unconnected-(U1-PadNFC2)",
@@ -376,7 +472,7 @@
         "TP2": "unconnected-(U1-~{RST}-PadTP2)",
         "TP3": "unconnected-(U1-CLK-PadTP3)",
         "TP5": "unconnected-(U1-DIO-PadTP5)",
-        "VUSB": "POWER"
+        "VUSB": "VUSB"
       }
     },
     "C9": {
