@@ -135,17 +135,17 @@
   <div class="wrap">
     <p class="eyebrow rv">04 ／ HARDWARE DESIGN</p>
     <h2 class="rv">らせんのかたちを、<em>基板そのもの</em>に。</h2>
-    <p class="lead rv">外形は 2 回転ぶんの二重らせん。LED・マイコン・コネクタまで 3D CAD で全部品を配置し、部品同士の干渉を確認しながら設計しています。シルクには糖・リン酸・水素結合・塩基対の番号を描き込みました。塩基の色は LED が決めるので、塩基の文字は印刷していません。吊り下げ穴は USB-C 側の左右の耳にあり、チェーンを通すと、らせんが下に垂れます。電池の電圧を 5 V に上げる昇圧回路と、USB／電池の自動切り替えも襟の表面に載せています（電池だけでも点灯。実機での確認はこれから）。</p>
+    <p class="lead rv">外形は 2 回転ぶんの二重らせん。LED・マイコン・コネクタまで 3D CAD で全部品を配置し、部品同士の干渉を確認しながら設計しています。シルクには糖・リン酸・水素結合・塩基対の番号を描き込みました。塩基の色は LED が決めるので、塩基の文字は印刷していません。吊り下げ穴は USB-C 側の左右の耳にあり、チェーンを通すと、らせんが下に垂れます。電池の電圧を 5 V に上げる昇圧回路と、USB／電池の自動切り替え、電池を入り切りするスライドスイッチも襟の表面に載せています（電池だけでも点灯。実機での確認はこれから）。</p>
     <div class="gallery">
       <figure class="shot big rv"><img src="assets/img/board-tilt.png" alt="基板全体の 3D CAD レンダリング（斜め上から）" width="1000" height="817"><figcaption>3D CAD ／ 全体</figcaption></figure>
-      <figure class="shot tall rv"><img src="assets/img/collar-front.png" alt="襟部分（表）：電池コネクタ" width="1095" height="1100"><figcaption>表 ／ 電池コネクタ（JST PH 2 ピン）と昇圧回路</figcaption></figure>
+      <figure class="shot tall rv"><img src="assets/img/collar-front.png" alt="襟部分（表）：電池コネクタ" width="1095" height="1100"><figcaption>表 ／ 電池コネクタ（JST PH 2 ピン）、電源スイッチ、昇圧回路</figcaption></figure>
       <figure class="shot tall rv"><img src="assets/img/collar-back.png" alt="襟部分（裏）：マイコンモジュール" width="1096" height="1100"><figcaption>裏 ／ USB-C マイコンモジュール</figcaption></figure>
     </div>
     <div class="specs rv">
       <div class="spec"><b>24</b><span>アドレサブル RGB LED<br>（WS2812B 系・個別に色指定）</span></div>
       <div class="spec"><b>12</b><span>塩基対<br>＝ 4 コドン</span></div>
       <div class="spec"><b>24×82</b><span>mm ／ 基板サイズ<br>吊り下げ穴 φ2 mm ×2（USB-C 側）</span></div>
-      <div class="spec"><b>USB-C</b><span>で書き換え<br>電池でも点灯（昇圧 5 V）</span></div>
+      <div class="spec"><b>USB-C</b><span>で書き換え<br>電池でも点灯（昇圧 5 V）<br>スイッチで電池を入り切り</span></div>
     </div>
     <p class="note rv">基板上のシルクは試作の初期配列 ATG GCA TCG TAA（M・A・S・STOP）。LED は 1 個ずつ色を指定できるため、光らせる配列はソフトウェアで変更できる設計です。</p>
   </div>

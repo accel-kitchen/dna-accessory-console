@@ -13,6 +13,8 @@
 // (5.0 V). The hardware switches between them (Q1 turns the boost off while USB is present), so this sketch does not
 // have to know which one is active. Full white is about 0.37 A at 5 V = about 0.7 A from a 3.0 V cell: keep
 // MAX_BRIGHTNESS low on a small battery.
+// Power switch SW1 (rev 7): it connects / disconnects the battery (via the P-MOSFET Q2). With SW1 off and no USB cable nothing is powered;
+// with SW1 off and USB plugged in the board runs from USB, and the battery is only charged to about 3.5 V (switch on to charge fully).
 // NOT compiled or flashed in the session that wrote it: build it once and check the points in README.md.
 //
 // Bring-up order (review item 06): 1) the start-up walk proves all 24 stages at low brightness,

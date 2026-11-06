@@ -1,4 +1,4 @@
-"""Build review.html (revision 6 board review: battery power path added) from the measured data.
+"""Build review.html (revision 7 board review: battery power path and power switch) from the measured data.
 
 Inputs (run these first):
   "C:\\Program Files\\KiCad\\9.0\\bin\\python.exe" gen/review_checks.py gen/_runs/review_checks.json
@@ -7,7 +7,7 @@ Inputs (run these first):
   kicad-cli pcb drc ... -o design/wiring-drc.json ; kicad-cli sch erc ... -o design/wiring-erc.json
   gen/_runs/strict_summary.json               # DRC run with strict custom rules (see the measurement section)
   gen/_runs/compare_cache/new_{top,bottom}.png (from gen/make_comparison.py)
-Writes review.html.  Earlier reviews: design/review-rev3-rev4.html and design/review-rev5.html.
+Writes review.html.  Earlier reviews: design/review-rev3-rev4.html, design/review-rev5.html and design/review-rev6.html.
 """
 import base64, io, json, re
 from pathlib import Path
@@ -56,10 +56,13 @@ assert not bad_walk, bad_walk
 def row(*cells, cls=''):
     return f'<tr class="{cls}">' + ''.join(f'<td>{c}</td>' for c in cells) + '</tr>'
 
+CL_X = strict["clearance"]["min"] / 0.1016        # Fusion minimum 4 mil
+ED_X = strict["edge_clearance"]["min"] / 0.3
+QR = BP["3.0 V cell"]
 meas = ''.join([
-    row('銅箔どうしの最小間隔（別ネット）', f'{strict["clearance"]["min"]:.3f} mm', '0.102 mm（4 mil）', '約1.4倍', '<span class="b ok">余裕あり</span>'),
+    row('銅箔どうしの最小間隔（別ネット）', f'{strict["clearance"]["min"]:.3f} mm', '0.102 mm（4 mil）', f'約{CL_X:.1f}倍', '<span class="b ok">余裕あり</span>'),
     row('最小線幅（信号／電源・GND／昇圧の大電流）', '0.15 ／ 0.20 ／ 0.40 mm', '0.102 mm（4 mil）', '約1.5倍以上', '<span class="b ok">余裕あり</span>'),
-    row('銅箔〜基板外形（穴を含む）', f'{strict["edge_clearance"]["min"]:.3f} mm', '0.3 mm 以上（このプロジェクトの規則は 0.5 mm）', '約1.9倍', '<span class="b ok">余裕あり</span>'),
+    row('銅箔〜基板外形（穴を含む）', f'{strict["edge_clearance"]["min"]:.3f} mm', '0.3 mm 以上（このプロジェクトの規則は 0.5 mm）', f'約{ED_X:.1f}倍', '<span class="b ok">余裕あり</span>'),
     row('LED パッドの間（ソルダーマスクのダム）', '0.39 mm', '0.32 mm 以上（緑・通常）／0.35 mm 以上（他色）', '1.1〜1.2倍', '<span class="b ok">足りる</span>'),
     row('ビア（パッド／穴／環）', f'0.56 ／ 0.30 ／ {strict["annular_width"]["min"]:.2f} mm', '最小穴 0.2 mm。環・パッド径の規定は公開ページで確認できず', '—', '<span class="b warn">要確認</span>'),
     row('ビア穴の縁どうし／穴〜銅箔', f'{strict["hole_to_hole"]["min"]:.2f} ／ {strict["hole_clearance"]["min"]:.3f} mm', '規定は公開ページで確認できず（このプロジェクトの規則は 0.25 mm）', '—', '<span class="b warn">要確認</span>'),
@@ -98,19 +101,19 @@ code{background:#e7e3d3;padding:1px 6px;border-radius:3px;font-size:.9em}.chart{
 
 html = f'''<!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="DNA LED 基板 改訂6（24.0 × 82.1 mm、電池でも LED が光る昇圧回路を追加）のレビュー。配線・ネット連鎖・電源・製造余裕・3D干渉を実測し、未確認の点を整理。">
-<title>DNA基板｜改訂6 レビュー</title><style>{CSS}</style></head><body><main>
-<div class="mast"><span>DNA / PCB — ENGINEERING REVIEW · REV. 6</span><span>2026.11.06 · KiCad 9.0.4</span></div>
+<meta name="description" content="DNA LED 基板 改訂7（24.0 × 82.1 mm、昇圧回路と電源スイッチを追加）のレビュー。配線・ネット連鎖・電源・製造余裕・3D干渉を実測し、未確認の点を整理。">
+<title>DNA基板｜改訂7 レビュー</title><style>{CSS}</style></head><body><main>
+<div class="mast"><span>DNA / PCB — ENGINEERING REVIEW · REV. 7</span><span>2026.11.07 · KiCad 9.0.4</span></div>
 <nav class="nav" aria-label="目次"><a href="#verdict">判定</a><a href="#findings">指摘</a><a href="#carry">前回の指摘の結果</a><a href="#measure">実測</a><a href="#power">電源</a><a href="#files">製造データ</a><a href="#notdone">確認していないこと</a></nav>
 
 <header class="hero"><div>
-<h1>電池でも<em>光る</em>設計に。<br>配線と製造データは<em>整合</em>。</h1>
-<p class="lead">改訂6（{stats["w"]:.1f} × {stats["h"]:.1f} mm、65 部品）は、前回（改訂5）の未解決点だった「電池だけでは LED が点灯しない」を、昇圧（MT3608B）と USB／電池の自動切り替えで解決した基板です。
+<h1>電池を<em>切れる</em>スイッチを追加。<br>配線と製造データは<em>整合</em>。</h1>
+<p class="lead">改訂7（{stats["w"]:.1f} × {stats["h"]:.1f} mm、68 部品）は、改訂6の昇圧（MT3608B）と USB／電池の自動切り替えに、電池をつなぐ・切る電源スイッチ（スライドスイッチ SW1 と P-MOSFET Q2）を加えた基板です。電池は消灯中も約 19 mA 流れ続けるため、スイッチで根元から切れるようにしました。
 KiCad の DRC・ERC に加えて、銅箔の間隔、電源の電圧降下、ネットの連鎖、部品の位置、3D 干渉、製造データを別の方法でも確かめました。</p>
 <div class="verdict" id="verdict"><b>判定：回路の接続・形状・製造データに誤りは見つかりませんでした。</b>
-電池 → 昇圧（5.0 V）→ LED の経路と、USB があるときは USB を優先する切り替えは、回路・基板・配線で確認できました。
-<b>ただし、追加した昇圧回路は実機で動かしていません。</b>確認をおすすめするのは、昇圧部品の調達（型番と在庫）、電池の仕様と電流、昇圧の GND の戻り経路（0.2 mm 幅）、吊り穴まわりの肉厚、ビアの環です。実機の製造・点灯・Fusion の受入れ確認は、まだ行っていません。</div></div>
-<figure><img src="{img_top}" alt="改訂6の表面"><img src="{img_bot}" alt="改訂6の裏面"></figure></header>
+電池 → 電源スイッチ → 昇圧（5.0 V）→ LED の経路と、USB があるときは USB を優先する切り替え、スイッチ OFF で電池が切れる回路は、回路・基板・配線で確認できました。
+<b>ただし、追加した昇圧回路と電源スイッチは実機で動かしていません。</b>確認をおすすめするのは、昇圧部品と電源スイッチ部品の調達（型番と在庫）、電池の仕様と電流、昇圧の GND の戻り経路（0.2 mm 幅）、吊り穴まわりの肉厚、ビアの環です。実機の製造・点灯・Fusion の受入れ確認は、まだ行っていません。</div></div>
+<figure><img src="{img_top}" alt="改訂7の表面"><img src="{img_bot}" alt="改訂7の裏面"></figure></header>
 <div class="kpi">
 <div><b>0 / 0 / 0</b><span>DRC：違反・未接続・回路図との差異<br>ERC は警告 {erc_n} 件（下記）</span></div>
 <div><b>{strict["clearance"]["min"]:.2f} mm</b><span>銅箔どうしの最小間隔の実測<br>Fusion の下限 0.10 mm</span></div>
@@ -122,15 +125,25 @@ KiCad の DRC・ERC に加えて、銅箔の間隔、電源の電圧降下、ネ
 {row('USB で給電して LED を点灯', '<span class="b ok">設計上は成立</span>', f'USB の 5 V → D2（ショットキー）→ POWER。Q1 が昇圧を止めるので電池は減らない。ダイオードの順電圧（約 0.4 V と見積り）を引いて LED は約 4.5 V。配線の損失は最遠 LED で {U1c["vdd_loss_worst_mV"]:.0f} mV。実機は未確認。')}
 {row('電池だけで LED を点灯', '<span class="b ok">設計上は成立</span>', f'電池（VBAT）→ L1 → MT3608B → D1 → POWER（5.0 V）。出力電圧は帰還抵抗 110 kΩ／15 kΩ で決まり、部品の公差を入れて {VLO:.2f}〜{VHI:.2f} V。<b>実機での起動・出力は未確認。</b>')}
 {row('USB を抜く・挿す瞬間', '<span class="b warn">要確認</span>', 'USB を抜くと Q1 が切れて昇圧が起動する。起動までの間は、昇圧の IC を通らず電池からインダクタとダイオード経由で LED に約 3.4 V が届く。LED が一瞬暗くなる、または再起動する可能性がある。USB を挿すと Q1 が EN を落とし、USB 経由に切り替わる。')}
-{row('電池をつないだまま USB で給電（充電）', '<span class="b ok">設計上は成立</span>', 'J1 → VBAT → XIAO の BAT+（ネット一致を確認）。充電は XIAO の機能で、昇圧とは別の経路。電池の極性・仕様は未確認。')}
+{row('電源スイッチ ON／OFF（USB なし）', '<span class="b ok">設計上は成立</span>', '電池（BAT_RAW）→ Q2（P-MOSFET）→ VBAT。ON：SW1 がゲートを GND に落とし Q2 が導通。OFF：R6 がゲートをソースに保ち Q2 が切れ、ボディダイオードも電池 → VBAT を止める。OFF では電池の電流はほぼ 0（待機の約 19 mA は止まる）。<b>実機は未確認</b>（R7-01）。')}
+{row('電池をつないだまま USB で給電（充電）', '<span class="b ok">設計上は成立</span>', '電池 → Q2 → VBAT → XIAO の BAT+（ネット一致を確認）。ON のときは満充電まで充電できる（充電は XIAO の機能）。OFF で USB を挿すと、Q2 のボディダイオード経由で電池は 3.5 V 程度までしか充電されない。電池の極性・仕様は未確認。')}
 {row('XIAO D6 → 24 個の LED を順に制御', '<span class="b ok">配線は成立</span>', 'D6 → R1（100 Ω）→ U2.DIN → … → U25 の 23 段をネットで確認。ファームウェアは未コンパイル・未書き込み（USB 給電のときだけ動く処理は削除済み）。')}
 {row('3.3 V の信号を LED が読めるか', '<span class="b warn">条件付き</span>', 'LED 資料 p.5：VDD=5 V での入力 High は 2.8 V 以上、Low は 1.6 V 以下。XIAO の 3.3 V は上回る。昇圧の出力が 4.8 V 台でも条件は近い。実波形は未測定。')}
 {row('Bluetooth（BLE）', '<span class="b warn">未確認</span>', 'XIAO の周囲の銅箔・昇圧のスイッチングとアンテナの位置関係は要確認（R6-06）。コンソールは USB シリアルを使うので、LED 点灯には影響しない。')}
-{row('Seeed Fusion での製造・組立', '<span class="b warn">見込みは良好</span>', '実測の余裕は公開仕様を満たす。ビアの環だけ規定を確認できなかった（R5-03）。昇圧部品の調達は未確認（R6-01）。Fusion の DFM 確認は未実施。')}
+{row('Seeed Fusion での製造・組立', '<span class="b warn">見込みは良好</span>', '実測の余裕は公開仕様を満たす。ビアの環だけ規定を確認できなかった（R5-03）。昇圧・電源スイッチ部品の調達は未確認（R6-01、R7-01）。Fusion の DFM 確認は未実施。')}
 </tbody></table></div></section>
 
 <section id="findings"><span class="lab">02 / FINDINGS</span><h2>指摘</h2>
-<p>「要判断」は設計仕様の決めが必要なもの、「要確認」は実部品・製造先・実機で確かめるもの、「参考」は知っておけばよいものです。今回は要判断がなくなり、昇圧回路に関する要確認が新しく加わりました。</p>
+<p>「要判断」は設計仕様の決めが必要なもの、「要確認」は実部品・製造先・実機で確かめるもの、「参考」は知っておけばよいものです。要判断はありません。今回は、電源スイッチに関する要確認（R7-01）が新しく加わりました。</p>
+
+<div class="find warn"><span class="id">R7-01 ／ 要確認 ／ 改訂7で追加</span><h3>電源スイッチ（SW1 ＋ Q2 ＋ R6）は実機で動かしていない。部品の調達も未確認</h3>
+<p>改訂6では電池は消灯中も昇圧と LED の待機電流で約 19 mA（概算）流れ続けていました。そこで、電池と回路の間に電源スイッチを入れました。小型の SMD スライドスイッチは定格が 50〜300 mA で、電池の電流（通常 0.05〜0.14 A、全白で最大 0.73 A）を直接は流せないため、
+<b>スイッチは P-MOSFET（Q2、AO3401A）のゲートだけを切り替え</b>、電流は Q2 が流す方式にしました。接続は、J1 の 1 番ピン（電池＋）→ Q2 のソース、Q2 のドレイン → VBAT（XIAO の BAT＋、昇圧の入力）、R6（100 kΩ）でゲートをソースに引き上げ（OFF）、SW1 でゲートを GND に接続（ON）です。</p>
+<p>電池から昇圧までの降下は、3.0 V の電池・0.73 A で <b>{QR["total_battery_to_inductor_mV"]:.0f} mV</b>（BAT_RAW の配線 {QR["bat_raw_path_mV"]:.0f} mV、Q2 のオン抵抗 {QR["q2_rds_on_mV"]:.0f} mV、VBAT の配線 {QR["vbat_path_mV"]:.0f} mV）です。Q2 のオン抵抗は 85 mΩ（AO3401A の一般的な仕様で、Vgs = −2.5 V のときの上限として置いた値。データシートは今回取得していません）で見積もりました。</p>
+<p>確認が必要なのは次の点です。①SW1 のどちらの向きが ON かは、スイッチ本体の表示（ON）に従います（基板のシルクは「PWR」だけ）。②部品：SW1 は Nidec Copal CHS-01A（LCSC C132834 に掲載を確認、定格 100 mA・6 VDC はゲート駆動なので足りる）、AO3401A と R6 の LCSC 番号は未確認です（BOM のリンクは検索ページ）。
+③スイッチ ON の瞬間に、昇圧の入力コンデンサ（10 µF × 2）などへ突入電流が流れます。電池の保護回路が働かないか、実機で確かめてください。④Q2 は電池の逆接続を防ぎません（極性は従来どおり、つなぐ前に確認）。
+⑤OFF のまま USB を挿すと、電池は Q2 のボディダイオード経由で 3.5 V 程度までしか充電されません（満充電は ON で）。</p>
+<p class="src">根拠：回路図とネットリスト、基板の配線から計算した抵抗網（<code>gen/review_checks.py</code>）。AO3401A のピン配置（1 ゲート、2 ソース、3 ドレイン）と Rds(on) は一般的な仕様に基づく記述で、データシートでの照合は未実施です。</p></div>
 
 <div class="find warn"><span class="id">R6-01 ／ 要確認 ／ 改訂6で追加</span><h3>昇圧回路は実機で動かしていない。部品の調達も未確認</h3>
 <p>追加した 13 部品（MT3608B、10 µH インダクタ、ショットキー 2 個、MOSFET、10 µF ×4、抵抗 ×4）は、データシートの標準回路（Fig.1：5 V 出力、110 kΩ／15 kΩ）に沿って選び、定格の余裕を計算しました。
@@ -140,13 +153,13 @@ KiCad の DRC・ERC に加えて、銅箔の間隔、電源の電圧降下、ネ
 
 <div class="find warn"><span class="id">R6-02 ／ 要確認 ／ 前回の指摘 07（電池の仕様）に対応</span><h3>電池の仕様と、電池から流れる電流</h3>
 <p>全白（LED 24 個で 0.37 A、5 V）のとき、電池から流れる電流は 3.7 V で約 {BP["3.7 V cell"]["I_in_A"]:.2f} A、3.0 V で約 {BP["3.0 V cell"]["I_in_A"]:.2f} A です（昇圧の効率 85 % の仮定）。ファームウェアの明るさ上限（128/255）では約半分です。
-容量 500 mAh の電池なら、全白で約 0.9 時間、上限どおりで約 1.7 時間の見積りです（概算で、実測ではありません）。容量が小さい電池（150 mAh 以下）は、全白で 4C 前後になるので避けてください。</p>
-<p>電池は<b>保護回路付きの 1 セル（3.7 V）</b>を使ってください。MT3608B は入力 2.4 V 付近で止まりますが、電池の過放電を防ぐ回路は基板にありません。J1 の 1 番ピン（基板の「+」側）が電池の＋です。JST PH の電池ケーブルは売り場によって赤黒の並びが逆の場合があるので、実物の極性を確かめずにつなぐと、XIAO や電池を壊すことがあります。</p></div>
+容量 500 mAh の電池なら、全白で約 0.9 時間、上限どおりで約 1.7 時間の見積りです（概算で、実測ではありません）。容量が小さい電池（150 mAh 以下）は、全白で 4C 前後になるので避けてください。消灯中も昇圧と LED の待機電流で約 19 mA（概算）流れるため、使わないときは電源スイッチを OFF にしてください（R7-01）。</p>
+<p>電池は<b>保護回路付きの 1 セル（3.7 V）</b>を使ってください。MT3608B は入力 2.4 V 付近で止まりますが、電池の過放電を防ぐ回路は基板にありません（電源スイッチは手動です）。J1 の 1 番ピン（基板の「+」側）が電池の＋です。JST PH の電池ケーブルは売り場によって赤黒の並びが逆の場合があるので、実物の極性を確かめずにつなぐと、XIAO や電池を壊すことがあります。</p></div>
 
 <div class="find warn"><span class="id">R6-03 ／ 要確認 ／ 改訂6で追加</span><h3>昇圧の GND の戻り経路が 0.2 mm 幅で、許容電流に近い</h3>
 <p>基板には GND の面（ベタ）がなく、GND は 0.2 mm 幅の配線です。昇圧の入力電流が電池へ戻る経路は、全白・3.0 V の電池で最大 {bat_gnd["I_max_A"]:.2f} A が、幅 {bat_gnd["width_mm"]:.1f} mm の銅箔を通ります。同じ幅の外層の許容電流は、温度上昇 10 K で約 {rc["ampacity_A_10K"]:.2f} A（IPC-2221）で、ほぼ同じ値です。
 ファームウェアの明るさ上限（128/255）では約 0.36 A、3.7 V の電池の全白でも約 0.58 A なので、実用上は余裕がありますが、全白を長く続けるとこの経路が温まります。</p>
-<p>昇圧の大電流の線（VBAT、SW）は 0.4 mm 幅で引きました（VBAT の最大電流 {BR["VBAT, battery to inductor, 3.0 V cell"]["I_max_A"]:.2f} A）。スイッチ端子（SW）の配線は {rc["trunk_widths"]["SW"]["length_mm"]:.1f} mm と短くまとまっています。
+<p>昇圧の大電流の線（BAT_RAW、VBAT、SW）は 0.4 mm 幅で引きました（VBAT の最大電流 {BR["VBAT, power switch to inductor, 3.0 V cell"]["I_max_A"]:.2f} A）。スイッチ端子（SW）の配線は {rc["trunk_widths"]["SW"]["length_mm"]:.1f} mm と短くまとまっています。
 改善案：GND を 0.4 mm 以上にする、または襟の部分に GND の銅箔（ベタ）を追加する。データシートも「強い GND 面」を勧めています。</p></div>
 
 <div class="find ref"><span class="id">R6-04 ／ 参考 ／ 前提の確認</span><h3>電池のマイナス（BAT−）を GND に直結した</h3>
@@ -166,17 +179,17 @@ ERC は、電池の＋と電源フラグ、BAT− と GND の端子の型の組�
 
 <div class="find ref"><span class="id">R6-06 ／ 参考（前回の R5-05 を更新）</span><h3>XIAO のアンテナ側に配線の銅箔と昇圧回路がある</h3>
 <p>XIAO の上端（らせんに向く側、モジュールの端は y=124 mm）を含む帯（x 90〜110、y 121〜129 mm）に、{a_z["F"] + a_z["B"]:.0f} mm 分の配線があります。さらに、昇圧回路は襟の表面（y 127〜141 mm）にあり、1.2 MHz で動くスイッチ部（インダクタとダイオード）はアンテナ側の端（y=124 mm）から約 4〜11 mm の位置です（L1 の端が 4 mm、D1 が 8 mm）。
-アンテナの位置と銅箔の禁止範囲は Seeed の資料で確認していません。BLE を使うときは、昇圧が動いている状態で通信距離を実測してください。</p></div>
+電源スイッチ（SW1、金属の端子と本体）も襟の左側（y 128〜135 mm）にあります。アンテナの位置と銅箔の禁止範囲は Seeed の資料で確認していません。BLE を使うときは、昇圧が動いている状態で通信距離を実測してください。</p></div>
 
 <div class="find ref"><span class="id">R6-07 ／ 参考</span><h3>シルク・LED 間隔・USB の電流</h3>
-<ul><li>襟のシルクは、昇圧部品の場所をあけるため、START/STOP と凡例 3 行（A=T 2 BONDS…、2 TURNS…、WATSON CRICK…）を削除し、REV の表記を「REV 6」にしました。「+」「−」は J1 のそばに移しました。</li>
+<ul><li>襟のシルクは、昇圧部品の場所をあけるため、START/STOP と凡例 3 行（A=T 2 BONDS…、2 TURNS…、WATSON CRICK…）を削除し、REV の表記を「REV 7」にしました。「+」「−」は J1 のそばに移し、電源スイッチのそばに「PWR」を入れました。</li>
 <li>LED の枠線 8 本の端が、外形に 0.08〜0.2 mm まで近づいています（DRC は警告扱い）。製造の外形の公差（±0.2 mm）で、端がわずかに欠ける可能性があります。</li>
 <li>LED 間隔が 5.5 mm なので、隣の LED の光が混ざりやすくなります。らせん内の窓は消えて、襟の上のスリットだけです。</li>
 <li>USB で給電するときは、LED 全白の 0.37 A に XIAO と電池の充電（最大 100 mA）が加わり、約 0.48 A で USB の 0.5 A に近づきます。ファームウェアの明るさ上限（128/255）では約 0.19 A です。</li></ul></div>
 
 <div class="find ref"><span class="id">R6-08 ／ 参考 ／ 資料の食い違い（今回修正）</span><h3>文書の更新</h3>
-<ul><li>旧 <code>review.html</code>（改訂5）は <code>design/review-rev5.html</code> に、さらに前のレビューは <code>design/review-rev3-rev4.html</code> にあります。</li>
-<li><code>lp/</code>（試作ページ）、<code>console/README.md</code>、2 つのファームウェアの冒頭、<code>fusion/README.md</code>、<code>design/README.md</code> を、電池でも光る構成に合わせて更新しました。</li></ul></div>
+<ul><li>旧 <code>review.html</code>（改訂6）は <code>design/review-rev6.html</code>、改訂5は <code>design/review-rev5.html</code>、さらに前のレビューは <code>design/review-rev3-rev4.html</code> にあります。</li>
+<li><code>lp/</code>（試作ページと 3D 画像）、<code>console/README.md</code>、2 つのファームウェアの冒頭、<code>fusion/README.md</code>、<code>design/README.md</code>、比較資料を、電源スイッチを加えた改訂7に合わせて更新しました。</li></ul></div>
 </section>
 
 <section id="carry"><span class="lab">03 / CARRY-OVER</span><h2>前回（改訂3）の指摘 01〜09 の結果</h2>
@@ -207,24 +220,24 @@ ERC は、電池の＋と電源フラグ、BAT− と GND の端子の型の組�
 </tbody></table></div>
 <div class="chart">{bars()}</div>
 <h3>電池から昇圧までの経路</h3>
-<div class="tw"><table><thead><tr><th>電池の電圧</th><th>電池から流れる電流（概算）</th><th>電池 → インダクタ（VBAT）の降下</th><th>昇圧の GND → 電池の降下</th></tr></thead><tbody>
-{row('3.7 V', f'{BP["3.7 V cell"]["I_in_A"]:.2f} A', f'{BP["3.7 V cell"]["vbat_path_mV"]:.0f} mV', f'{BP["3.7 V cell"]["gnd_return_mV"]:.0f} mV')}
-{row('3.0 V（空に近い）', f'{BP["3.0 V cell"]["I_in_A"]:.2f} A', f'{BP["3.0 V cell"]["vbat_path_mV"]:.0f} mV', f'{BP["3.0 V cell"]["gnd_return_mV"]:.0f} mV')}
+<div class="tw"><table><thead><tr><th>電池の電圧</th><th>電池から流れる電流（概算）</th><th>J1 → Q2 の配線</th><th>Q2 のオン抵抗（見積り）</th><th>Q2 → インダクタの配線</th><th>合計</th><th>昇圧の GND → 電池の降下</th></tr></thead><tbody>
+{row('3.7 V', f'{BP["3.7 V cell"]["I_in_A"]:.2f} A', f'{BP["3.7 V cell"]["bat_raw_path_mV"]:.0f} mV', f'{BP["3.7 V cell"]["q2_rds_on_mV"]:.0f} mV', f'{BP["3.7 V cell"]["vbat_path_mV"]:.0f} mV', f'<b>{BP["3.7 V cell"]["total_battery_to_inductor_mV"]:.0f} mV</b>', f'{BP["3.7 V cell"]["gnd_return_mV"]:.0f} mV')}
+{row('3.0 V（空に近い）', f'{BP["3.0 V cell"]["I_in_A"]:.2f} A', f'{BP["3.0 V cell"]["bat_raw_path_mV"]:.0f} mV', f'{BP["3.0 V cell"]["q2_rds_on_mV"]:.0f} mV', f'{BP["3.0 V cell"]["vbat_path_mV"]:.0f} mV', f'<b>{BP["3.0 V cell"]["total_battery_to_inductor_mV"]:.0f} mV</b>', f'{BP["3.0 V cell"]["gnd_return_mV"]:.0f} mV')}
 </tbody></table></div>
 <ul><li>LED の動作電圧は 2.5〜5.5 V（資料 p.5）。昇圧の出力は {VLO:.2f}〜{VHI:.2f} V、配線の損失は 0.1〜0.2 V なので問題ありません（USB 動作では D2 の順電圧で約 4.5 V）。この昇圧は、電池の電圧が下がっても 5 V 近くを保つので、LED の色（A/T/G/C の識別色）が電池の残量で変わりません。</li>
-<li>各配線の最大電流：電源の本線 {BR["POWER trunk, all white (battery mode)"]["I_max_A"]:.2f} A（幅 {BR["POWER trunk, all white (battery mode)"]["width_mm"]:.1f} mm）、LED の GND 戻り {BR["GND, LED return, all white"]["I_max_A"]:.2f} A（幅 {BR["GND, LED return, all white"]["width_mm"]:.1f} mm）、電池〜インダクタ {BR["VBAT, battery to inductor, 3.0 V cell"]["I_max_A"]:.2f} A（幅 {BR["VBAT, battery to inductor, 3.0 V cell"]["width_mm"]:.1f} mm）、昇圧の GND 戻り {bat_gnd["I_max_A"]:.2f} A（幅 {bat_gnd["width_mm"]:.1f} mm → R6-03）。0.2 mm 幅の許容電流は約 {rc["ampacity_A_10K"]:.2f} A（10 K 上昇、IPC-2221）。</li>
+<li>各配線の最大電流：電源の本線 {BR["POWER trunk, all white (battery mode)"]["I_max_A"]:.2f} A（幅 {BR["POWER trunk, all white (battery mode)"]["width_mm"]:.1f} mm）、LED の GND 戻り {BR["GND, LED return, all white"]["I_max_A"]:.2f} A（幅 {BR["GND, LED return, all white"]["width_mm"]:.1f} mm）、電池〜スイッチ {BR["BAT_RAW, battery connector to the power switch, 3.0 V cell"]["I_max_A"]:.2f} A（幅 {BR["BAT_RAW, battery connector to the power switch, 3.0 V cell"]["width_mm"]:.1f} mm）、スイッチ〜インダクタ {BR["VBAT, power switch to inductor, 3.0 V cell"]["I_max_A"]:.2f} A（幅 {BR["VBAT, power switch to inductor, 3.0 V cell"]["width_mm"]:.1f} mm）、昇圧の GND 戻り {bat_gnd["I_max_A"]:.2f} A（幅 {bat_gnd["width_mm"]:.1f} mm → R6-03）。0.2 mm 幅の許容電流は約 {rc["ampacity_A_10K"]:.2f} A（10 K 上昇、IPC-2221）。</li>
 <li>この計算は直流で、銅箔の温度・接触抵抗・昇圧のスイッチング（1.2 MHz）の影響・XIAO の USB 5 V 経路の降下は含みません。実機の測定が必要です。</li></ul></section>
 
 <section id="files"><span class="lab">06 / NETS & FILES</span><h2>ネット・部品・製造データの整合</h2>
 <h3>基板上のネットの確認（KiCad の基板データから）</h3><ul class="walk">{walk}</ul>
-<h3>改訂5から変えたこと・変えていないこと</h3>
-<ul><li>追加：昇圧と電源切り替えの 13 部品（表面の襟）、電池のマイナスの GND 直結、シルクの整理。</li>
+<h3>改訂6から変えたこと・変えていないこと</h3>
+<ul><li>追加：電源スイッチの 3 部品（SW1、Q2、R6、表面の襟）。J1 の 1 番ピンと XIAO の BAT＋は、直結から Q2 を挟む接続（BAT_RAW と VBAT）に変更。シルクは REV 7 と PWR。改訂6の昇圧と電源切り替えの 13 部品、電池のマイナスの GND 直結は継続。</li>
 <li>変えていない：らせんの形（24.0 × 82.09 mm）、LED 24 個とコンデンサ 24 個の位置・向き・面、U1・J1・R1・C25 の位置、LED のデータ連鎖（U2 → U25）。</li>
-<li>回路図を更新（部品 13 点とネットの追加、<code>U1.VUSB</code> のネット名を POWER から VUSB へ、電池の＋を VBAT へ）。部品の UUID は、既存の 52 個で変更なし。</li></ul>
+<li>回路図を更新（部品 16 点とネットの追加、<code>U1.VUSB</code> のネット名を POWER から VUSB へ、J1 と XIAO の BAT＋をつないでいた配線を切って BAT_RAW と VBAT に分けた）。部品の UUID は、既存の 52 個で変更なし。</li></ul>
 <h3>製造データ（<code>fusion/</code>）</h3>
 <ul><li>ガーバー・ドリル・実装座標を現在の基板から作り直した。外形サイズ {job["X"]:.2f} × {job["Y"]:.2f} mm（ガーバーのジョブ情報）。</li>
 <li>ドリルは φ0.30 mm のみで {drill_hits} 箇所＝基板のビアの数と一致。穴あけ（NPTH）はなし。</li>
-<li>BOM は 13 行・65 点、実装座標は {rc["centroid"]["rows"]} 行で、基板の座標・面と 0.01 mm 以内で一致（不一致 {len(rc["centroid"]["mismatch"])} 件）。実装図に昇圧部の拡大図（Detail E）を追加。</li>
+<li>BOM は 15 行・68 点、実装座標は {rc["centroid"]["rows"]} 行で、基板の座標・面と 0.01 mm 以内で一致（不一致 {len(rc["centroid"]["mismatch"])} 件）。実装図に昇圧部の拡大図（Detail E）と電源スイッチの拡大図（Detail F）を追加。</li>
 <li>コンソールの LED 座標（<code>console/board-data.js</code>）は <code>base-pairs.csv</code> と一致。</li></ul>
 <h3>3D 干渉</h3>
 <ul><li>全 {itf["components"]} 部品の STEP で、部品どうし・部品と基板の衝突は 0 件。</li>
@@ -232,16 +245,17 @@ ERC は、電池の＋と電源フラグ、BAT− と GND の端子の型の組�
 
 <section id="notdone"><span class="lab">07 / NOT VERIFIED</span><h2>確認していないこと</h2>
 <ul><li><b>昇圧回路の動作</b>（起動、5 V の出力、負荷変動、USB の抜き差しでの切り替え、効率、発熱、スイッチングのノイズ）。</li>
+<li><b>電源スイッチの動作</b>（ON／OFF での導通、OFF のときの電池電流、ON の瞬間の突入電流、OFF で USB を挿したときの充電、SW1 の ON の向き）。AO3401A のピン配置・Rds(on) のデータシート照合。</li>
 <li>実際の基板の製造、はんだ付け、通電、LED の点灯、温度、電池での持続時間、BLE の通信距離、ペンダントとしての重さ・つり合い。</li>
 <li>ファームウェアのコンパイル、書き込み、コンソールとの実機接続。</li>
-<li>昇圧部品の調達（MT3608B、インダクタ、抵抗の LCSC 番号と在庫）と、インダクタ代替品のパッド寸法。</li>
+<li>昇圧部品と電源スイッチ部品の調達（MT3608B、インダクタ、AO3401A、抵抗の LCSC 番号と在庫。SW1 の CHS-01A は LCSC C132834 の掲載を確認）と、インダクタ代替品のパッド寸法。</li>
 <li>Seeed Fusion の DFM 確認・見積・受入れ（ビアの環、穴・ビアの間隔、組立の部品間隔、基準マーク、XIAO を裏面に実装する工程は、公開ページで規定を確認できませんでした）。</li>
 <li>XIAO の底面パッド・アンテナ・充電の仕様の最新版との照合（Seeed の回路図は v1.1 を使用）。BAT− が GND であることの実物での導通確認。</li>
 <li>LED の最大定格・実際の購入ロットの仕様（資料は XINGLIGHT の公開データシート）。</li>
 <li>耳の強度は概算で、実物の引っ張りや衝撃の試験はありません。</li></ul></section>
 
-<footer>測定・生成：<code>gen/review_checks.py</code>（抵抗網・ネット・位置）、<code>gen/check_interference.py</code>（3D 干渉）、厳しい規則の DRC（<code>gen/_runs/strict_summary.json</code>）、<code>gen/make_review.py</code>。
-旧レビュー：<code>design/review-rev5.html</code>、<code>design/review-rev3-rev4.html</code>　比較資料：<code>design/comparison-rev4-rev5.html</code>　Fusion 公開仕様：seeedstudio.com の製造仕様 wiki と Fusion PCB のページ。　MT3608B：Aerosemi データシート Rev1.1。</footer>
+<footer>測定・生成：<code>gen/review_checks.py</code>（抵抗網・ネット・位置）、<code>gen/check_interference.py</code>（3D 干渉）、厳しい規則の DRC（<code>gen/strict_drc.py</code> → <code>gen/_runs/strict_summary.json</code>）、<code>gen/make_review.py</code>。
+旧レビュー：<code>design/review-rev6.html</code>、<code>design/review-rev5.html</code>、<code>design/review-rev3-rev4.html</code>　比較資料：<code>design/comparison-rev4-rev5.html</code>　Fusion 公開仕様：seeedstudio.com の製造仕様 wiki と Fusion PCB のページ。　MT3608B：Aerosemi データシート Rev1.1。</footer>
 </main></body></html>'''
 (ROOT / 'review.html').write_text(html, encoding='utf-8')
 print('wrote review.html', round((ROOT / 'review.html').stat().st_size / 1e3), 'kB')

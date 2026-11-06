@@ -1,10 +1,19 @@
 [
   {
     "type": "text",
+    "text": "PWR",
+    "xy": [
+      91.55,
+      132.25
+    ],
+    "size": 0.9
+  },
+  {
+    "type": "text",
     "text": "-",
     "xy": [
       106.1,
-      141.5
+      143.9
     ],
     "size": 1.1
   },
@@ -37,7 +46,7 @@
   },
   {
     "type": "text",
-    "text": "REV 6  -  5.5 mm / PAIR",
+    "text": "REV 7  -  5.5 mm / PAIR",
     "xy": [
       100.0,
       122.1

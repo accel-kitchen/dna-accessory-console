@@ -2,8 +2,9 @@
 
   "C:\\Program Files\\KiCad\\9.0\\python.exe" gen/add_boost_pcb.py <source.kicad_pcb> <out.kicad_pcb>
 
-* nets: J1.1 and U1.BAT+ move from Net-(U1-BAT+) to VBAT, new nets VUSB / SW / FB / BOOST_EN; U1.VUSB moves from POWER to VUSB
-* the 13 parts of gen/add_boost_sch.py are added on the front at the positions of gen/_boost_place.json, linked to the schematic symbols
+* nets: U1.BAT+ moves from Net-(U1-BAT+) to VBAT, J1.1 to BAT_RAW (the battery side of the rev 7 power switch Q2/R6/SW1),
+  new nets VUSB / SW / FB / BOOST_EN / PWR_G; U1.VUSB moves from POWER to VUSB
+* the 16 parts of gen/add_boost_sch.py are added on the front at the positions of gen/_boost_place.json, linked to the schematic symbols
 Placement is stored, so the result is reproducible; gen/rebuild_dna_board.py then starts from <out.kicad_pcb>.
 """
 import sys, json, importlib.util
@@ -26,15 +27,15 @@ assert 'U26' not in fps, 'already applied'
 
 # ---- nets
 nets = b.GetNetsByName()
-for name in ('VBAT', 'VUSB', 'SW', 'FB', 'BOOST_EN'):         # (renaming Net-(U1-BAT+) leaves a stale name map, so the pads move to a new net)
+for name in ('VBAT', 'VUSB', 'SW', 'FB', 'BOOST_EN', 'BAT_RAW', 'PWR_G'):         # (renaming Net-(U1-BAT+) leaves a stale name map, so the pads move to a new net)
     b.Add(pcb.NETINFO_ITEM(b, name))
 nets = b.GetNetsByName()
 assert fps['U1'].FindPadByNumber('VUSB').GetNetname() == 'POWER'
 fps['U1'].FindPadByNumber('VUSB').SetNet(nets['VUSB'])
-for ref, num in (('J1', '1'), ('U1', 'BAT_P')):
+for ref, num, net in (('J1', '1', 'BAT_RAW'), ('U1', 'BAT_P', 'VBAT')):
     pd = fps[ref].FindPadByNumber(num)
     assert pd.GetNetname() == 'Net-(U1-BAT+)', (ref, num, pd.GetNetname())
-    pd.SetNet(nets['VBAT'])
+    pd.SetNet(nets[net])
 
 for ref, num in (('J1', '2'), ('U1', 'BAT_N')):             # battery return = GND (see add_boost_sch.py)
     pd = fps[ref].FindPadByNumber(num)

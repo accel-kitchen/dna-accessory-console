@@ -4,6 +4,7 @@
 //
 // LED power: USB (5 V through D2) when a cable is present, otherwise the battery through the MT3608B boost converter
 // (5.0 V); the hardware switches between them. Not compiled or flashed in this session.
+// Power switch SW1 (rev 7) connects / disconnects the battery; with it off and no USB cable nothing is powered.
 //
 // Bring-up order (review item 06): 1) walk one pixel at low brightness to prove all 24 stages,
 // 2) light the 12 pairs two at a time, 3) only then raise BRIGHTNESS. Measure current and the

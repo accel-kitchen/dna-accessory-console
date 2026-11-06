@@ -3,10 +3,17 @@
 LED power used to be U1.VUSB only.  Now:  battery -> MT3608B boost (5.0 V) -> POWER,  USB -> D2 -> POWER,
 and the boost is switched off by Q1 while USB is present (EN pulled low), so USB wins and the cell is not drained.
 
-  VBAT (J1.1 / U1.BAT+) --L1--> SW --D1--> POWER      U26 MT3608B: IN=VBAT EN=BOOST_EN SW FB GND
+  VBAT (U1.BAT+, after the rev 7 power switch) --L1--> SW --D1--> POWER      U26 MT3608B: IN=VBAT EN=BOOST_EN SW FB GND
   POWER --R2--> FB --R3--> GND                          5.0 V = 0.6 V x (1 + 110k / 15k)   (datasheet Fig.1 values)
   U1.VUSB (net VUSB) --D2--> POWER                      Q1 (2N7002): G=VUSB, S=GND, D=BOOST_EN;  R4 BOOST_EN->VBAT pull-up
   R5 VUSB->GND (gate pull-down);  C26/C28 = input, C27/C29 (+ existing C25) = output capacitors
+
+Rev 7 adds a power switch between the battery connector and the rest (the small SMD slide switches are rated 0.05-0.3 A, so
+the switch only drives the gate of a P-MOSFET):
+
+  J1.1 (net BAT_RAW) --- Q2 source;  Q2 drain = VBAT (L1, U26, XIAO BAT+);  R6 100k gate->BAT_RAW (off);  SW1 gate->GND (on)
+  OFF: the gate is at the source, the channel is open and the body diode (drain->source) blocks the battery from VBAT;
+  the battery can only be charged up to about 3.5 V through the diode while USB is plugged in (ON charges fully).
 
 Nets are made with global labels at the pin ends, like gen/add_support_parts.py.  Run once; writes gen/_boost_uuids.json.
 """
@@ -63,6 +70,8 @@ PINS = {
     'Device:D_Schottky': {'1': (-3.81, 0, 0), '2': (3.81, 0, 180)},                     # 1 = K, 2 = A
     'Regulator_Switching:MT3608': {'5': (-7.62, 2.54, 0), '4': (-7.62, -2.54, 0), '2': (0, -7.62, 90), '1': (7.62, 2.54, 180), '3': (7.62, -2.54, 180)},
     'Transistor_FET:Q_NMOS_GSD': {'1': (-5.08, 0, 0), '3': (2.54, 5.08, 270), '2': (2.54, -5.08, 90)},   # 1 = G, 2 = S, 3 = D (the symbol 2N7002 extends this one)
+    'Transistor_FET:Q_PMOS_GSD': {'1': (-5.08, 0, 0), '3': (2.54, 5.08, 270), '2': (2.54, -5.08, 90)},   # 1 = G, 2 = S, 3 = D
+    'Switch:SW_SPST': {'1': (-5.08, 0, 0), '2': (5.08, 0, 180)},
 }
 C0805 = 'Capacitor_SMD:C_0805_2012Metric'
 R0402 = 'Resistor_SMD:R_0402_1005Metric'
@@ -82,6 +91,10 @@ PARTS = [
     ('R3', 'Device:R', '15k', R0402, (229.87, 154.94), {'1': 'FB', '2': 'GND'}),
     ('R4', 'Device:R', '100k', R0402, (242.57, 154.94), {'1': 'VBAT', '2': 'BOOST_EN'}),
     ('R5', 'Device:R', '100k', R0402, (255.27, 154.94), {'1': 'VUSB', '2': 'GND'}),
+    # rev 7: power switch (pin 1 of Q2 is G, 2 is S, 3 is D, like AO3401A in SOT-23; SW1 is a 1-position SMD slide (DIP-type) switch, pins 1 / 2)
+    ('Q2', 'Transistor_FET:Q_PMOS_GSD', 'AO3401A', 'Package_TO_SOT_SMD:SOT-23', (189.23, 172.72), {'1': 'PWR_G', '2': 'BAT_RAW', '3': 'VBAT'}),
+    ('R6', 'Device:R', '100k', R0402, (172.72, 172.72), {'1': 'BAT_RAW', '2': 'PWR_G'}),
+    ('SW1', 'Switch:SW_SPST', 'SLIDE_SW', 'Button_Switch_SMD:SW_DIP_SPSTx01_Slide_Copal_CHS-01A_W5.08mm_P1.27mm_JPin', (172.72, 190.5), {'1': 'PWR_G', '2': 'GND'}),
 ]
 
 
@@ -119,7 +132,8 @@ def main():
     if '"MT3608B"' in t:
         sys.exit('already applied')
     # 1) embedded library symbols (C and R are already there)
-    need = [('Device', 'L'), ('Device', 'D_Schottky'), ('Regulator_Switching', 'MT3608'), ('Transistor_FET', 'Q_NMOS_GSD'), ('power', 'PWR_FLAG')]
+    need = [('Device', 'L'), ('Device', 'D_Schottky'), ('Regulator_Switching', 'MT3608'), ('Transistor_FET', 'Q_NMOS_GSD'), ('Transistor_FET', 'Q_PMOS_GSD'),
+            ('Switch', 'SW_SPST'), ('power', 'PWR_FLAG')]
     libs = '\n'.join(lib_symbol(l, n) for l, n in need if '(symbol "%s:%s"' % (l, n) not in t)
     t = t.replace('\t(lib_symbols\n', '\t(lib_symbols\n' + libs + '\n', 1)
     # 2) U1.VUSB: the label that used to say POWER now says VUSB; U1.BAT+ gets the name VBAT
@@ -129,6 +143,12 @@ def main():
     # BAT- of the XIAO is its GND (Seeed XIAO nRF52840 v1.1 schematic: the battery has only VBAT and GND), so the battery return joins GND here:
     # the boost input current then does not have to pass through the module
     items = [label('VBAT', 17.78, -44.45, 0), label('GND', 17.78, -13.97, 0)]
+    # rev 7: J1.1 and U1.BAT+ used to be joined by two wires; cut them, J1.1 becomes the battery side of the power switch (net BAT_RAW)
+    for pts in ('(xy 17.78 -44.45) (xy -3.81 -44.45)', '(xy -3.81 -44.45) (xy -3.81 -5.08)'):
+        m = re.search(r'\t\(wire\n\t\t\(pts\n\t\t\t%s\n\t\t\)\n(?:.*\n){1,6}?\t\)\n' % re.escape(pts), t)
+        assert m, pts
+        t = t.replace(m.group(0), '', 1)
+    items.append(label('BAT_RAW', -3.81, -5.08, 90))
     # 3) parts with a label on every pin
     uuids = {}
     for ref, lib, value, fp, (x, y), nets in PARTS:

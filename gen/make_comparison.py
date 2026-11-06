@@ -121,7 +121,7 @@ rows = [
     ('配線の総延長', f'{O["track_len"]:,.0f} mm', f'{N["track_len"]:,.0f} mm', pct(O['track_len'], N['track_len']), ''),
     ('ビア', f'{O["vias"]} 個', f'{N["vias"]} 個', pct(O['vias'], N['vias']), '密度が上がり、わずかに増えた'),
     ('FR4 基板の重さ（概算）', f'{fr4(O["area"]):.1f} g', f'{fr4(N["area"]):.1f} g', pct(fr4(O['area']), fr4(N['area'])), '面積 × 1.6 mm × 1.85 g/cm³。部品・銅は含まない'),
-    ('部品点数', f'{O["footprints"]} 点', f'{N["footprints"]} 点', '', '新は昇圧と電源切り替えの 13 部品を追加（BOM は 6 → 13 品番）'),
+    ('部品点数', f'{O["footprints"]} 点', f'{N["footprints"]} 点', '', '新は昇圧・切り替えの 13 部品と電源スイッチの 3 部品を追加（BOM は 6 → 15 品番）'),
     ('DRC（KiCad 9.0.4）', '違反 0 / 未接続 0 / 差異 0', '違反 0 / 未接続 0 / 差異 0', '', '回路図は昇圧回路などを追加'),
 ]
 table = ''.join(f'<tr><th scope="row">{a}</th><td>{b}</td><td>{c}</td><td class="d">{d}</td><td class="n">{e}</td></tr>' for a, b, c, d, e in rows)
@@ -142,7 +142,7 @@ def board_fig(name, label, side):
 
 html = f'''<!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DNA基板｜旧基板との比較（改訂4 → 改訂6）</title>
+<title>DNA基板｜旧基板との比較（改訂4 → 改訂7）</title>
 <style>
 :root{{--paper:#f4f1e7;--ink:#173e34;--muted:#59695d;--line:#b7c1ad;--rust:#983c2c;--green:#1f5a49;--white:#fcfaf3;--soft:#e8eddc}}
 *{{box-sizing:border-box}}body{{margin:0;background:var(--paper);color:var(--ink);font:15px/1.85 "Yu Gothic",Meiryo,sans-serif}}
@@ -171,9 +171,9 @@ footer{{margin-top:56px;border-top:3px solid var(--ink);padding-top:12px;font-si
 @media print{{body{{background:#fff;font-size:11px}}main{{max-width:none;padding:0}}section{{break-inside:avoid}}}}
 </style></head><body><main>
 <div class="mast"><span>DNA / PCB — REVISION COMPARISON</span><span>2026.11.05 · KiCad 9.0.4</span></div>
-<h1>旧基板より、<em>約4割</em>小さく。<br>吊り穴はマイコン側へ、<br>電池でも光る。</h1>
-<p class="lead">改訂4（配線済みの旧基板、29.0 × 116.6 mm）と改訂6（現在の基板、24.0 × 82.1 mm）を、同じ縮尺で並べて比べた資料です。
-LED の並び順とデータ連鎖は変えず、外形・LED の配置・吊り穴・シルクを変え、電池でも光るように昇圧と電源切り替えの 13 部品を襟の表面に追加しました。</p>
+<h1>旧基板より、<em>約4割</em>小さく。<br>吊り穴はマイコン側へ、<br>電池でも光り、<br>スイッチで切れる。</h1>
+<p class="lead">改訂4（配線済みの旧基板、29.0 × 116.6 mm）と改訂7（現在の基板、24.0 × 82.1 mm）を、同じ縮尺で並べて比べた資料です。
+LED の並び順とデータ連鎖は変えず、外形・LED の配置・吊り穴・シルクを変え、電池でも光るように昇圧と電源切り替えの 13 部品を、電池を入り切りする電源スイッチの 3 部品とともに襟の表面に追加しました。</p>
 <div class="kpi">
 <div><b>{O["h"]:.0f} → {N["h"]:.0f} mm</b><span>基板の長さ（{pct(O["h"], N["h"])}）</span></div>
 <div><b>{O["w"]:.0f} → {N["w"]:.0f} mm</b><span>基板の幅（{pct(O["w"], N["w"])}）</span></div>
@@ -183,7 +183,7 @@ LED の並び順とデータ連鎖は変えず、外形・LED の配置・吊り
 
 <section><span class="lab">01 / SIDE BY SIDE</span><h2>同じ縮尺で並べる</h2>
 <p>左が旧基板、右が新基板です（表面、3D レンダリング）。らせんが短く細くなり、襟の幅が詰まり、下端に吊り穴の耳が付きました。</p>
-<div class="pair">{board_fig("old", "<b>旧</b> 改訂4　29.0 × 116.6 mm", "top")}<div class="arrow">→</div>{board_fig("new", "<b>新</b> 改訂6　24.0 × 82.1 mm", "top")}</div>
+<div class="pair">{board_fig("old", "<b>旧</b> 改訂4　29.0 × 116.6 mm", "top")}<div class="arrow">→</div>{board_fig("new", "<b>新</b> 改訂7　24.0 × 82.1 mm", "top")}</div>
 <div class="pair">{board_fig("old", "<b>旧</b> 裏面（XIAO nRF52840）", "bottom")}<div class="arrow">→</div>{board_fig("new", "<b>新</b> 裏面（XIAO nRF52840）", "bottom")}</div>
 </section>
 
@@ -210,12 +210,12 @@ LED の並び順とデータ連鎖は変えず、外形・LED の配置・吊り
 <div class="grid2"><figure><img src="{scaled(old_silk, 29.0)}" style="width:{29.0 / 29.0 * 100:.1f}%" alt="旧基板の塩基文字つきシルク"><figcaption><b>旧</b> 各段に T/C/A/G の文字（表裏で 48 個）</figcaption></figure>
 <figure><img src="{scaled(new_silk, 24.0)}" style="width:{24.0 / 29.0 * 100:.1f}%" alt="新基板のシルク"><figcaption><b>新</b> 文字なし。対番号・水素結合・糖とリン酸の環は残す</figcaption></figure></div>
 <p>LED の色はソフトウェアで決めるので、基板に固定の塩基文字は印刷しません。襟の配列表記（5′-ATG GCA TCG TAA-3′ など）と水素結合の本数は、そのままです。襟の表面は、昇圧部品の場所をあけるため、START/STOP と凡例 3 行を削除しました。</p>
-<h3>④ 電池でも光る：昇圧と電源切り替えを追加</h3>
-<p>旧基板の LED の電源は XIAO の USB の 5 V だけで、電池では光りませんでした。新基板は、電池を昇圧（MT3608B で 5.0 V）して LED に供給し、USB があるときは USB を優先して自動で切り替えます（部品 13 点、襟の表面）。電池のマイナスは GND に直結し、昇圧の電流が XIAO の内部を通らないようにしました。詳しい確認結果は <code>review.html</code> にあります。</p>
+<h3>④ 電池でも光る：昇圧・電源切り替え・電源スイッチを追加</h3>
+<p>旧基板の LED の電源は XIAO の USB の 5 V だけで、電池では光りませんでした。新基板は、電池を昇圧（MT3608B で 5.0 V）して LED に供給し、USB があるときは USB を優先して自動で切り替えます（部品 13 点、襟の表面）。電池のマイナスは GND に直結し、昇圧の電流が XIAO の内部を通らないようにしました。電池は、基板上のスライドスイッチ（P-MOSFET を駆動）で入り切りでき、OFF にすると USB がないとき電池の電流は流れません（昇圧は消灯中も約 19 mA 流れるため）。詳しい確認結果は <code>review.html</code> にあります。</p>
 </section>
 
 <section><span class="lab">05 / NEW COLLAR</span><h2>新しい襟まわり（3D）</h2>
-<div class="grid2"><figure><img src="{webp(collar_front, 560)}" alt="襟の表面：電池コネクタ、昇圧回路、吊り穴の耳"><figcaption>表：電池コネクタ（J1）、昇圧回路、吊り穴の耳</figcaption></figure>
+<div class="grid2"><figure><img src="{webp(collar_front, 560)}" alt="襟の表面：電池コネクタ、昇圧回路、吊り穴の耳"><figcaption>表：電池コネクタ（J1）、電源スイッチ、昇圧回路、吊り穴の耳</figcaption></figure>
 <figure><img src="{webp(collar_back, 560)}" alt="襟の裏面：マイコンモジュール"><figcaption>裏：XIAO と USB-C。プラグは耳の間を通る</figcaption></figure></div>
 </section>
 

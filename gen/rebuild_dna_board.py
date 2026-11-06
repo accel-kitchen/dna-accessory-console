@@ -180,7 +180,7 @@ for side in ('F','B'):
 
 # Front collar: title, the encoded sequence, legend and polarity of the battery connector.
 put_text('F','DNA / 12 BASE PAIRS',(100,119.7),1.0)
-put_text('F',f'REV 6  -  {PD:g} mm / PAIR',(100,122.1),.8)
+put_text('F',f'REV 7  -  {PD:g} mm / PAIR',(100,122.1),.8)
 put_text('F',"5'-"+' '.join(SEQ[k:k+3] for k in range(0,12,3))+"-3'",(100,124.5),1.0,.15)
 put_text('F',"3'-"+' '.join(''.join(PAIR[c] for c in SEQ[k:k+3]) for k in range(0,12,3))+"-5'",(100,126.7),1.0,.15)
 def try_put(side,value,center,size,thick=.12,radius=7.0):
@@ -197,6 +197,9 @@ def try_put(side,value,center,size,thick=.12,radius=7.0):
 # The battery power parts take the lower half of the front collar: START/STOP and the three legend lines are gone.
 # '+' and '-' mark the J1 pads (pad 1 = BAT+ at x=99, pad 2 = BAT- at x=101).
 try_put('F','+',(96.9,141.5),1.1);try_put('F','-',(103.1,141.5),1.1)
+# Rev 7 power switch SW1 (slide DIP-type, the body shows which end is ON): a mark next to it.
+_sw=[f for f in b.GetFootprints() if f.GetReference()=='SW1'][0]
+try_put('F','PWR',(pcb.ToMM(_sw.GetPosition().x),pcb.ToMM(_sw.GetPosition().y)+4.6),.9,radius=6.0)
 # Back collar: orientation marks for the XIAO and the USB-C mouth.
 put_text('B','DNA / 12 BASE PAIRS',(100,119.6),.9)
 put_text('B','USB-C',(100,144.85),.8,must=False)

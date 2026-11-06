@@ -110,3 +110,19 @@ python gen/make_dna_geometry.py --dependency-path '<Shapelyインストール先
 - 発注データ（`../fusion/`）は 65 点・13 品番で再生成。実装図に昇圧部の拡大図（Detail E）を追加。
 - 実機での昇圧回路の動作は未確認。レビューは `../review.html`、改訂4との比較は `comparison-rev4-rev5.html`。
 - 更新前の状態：`pre-boost-20261106/`。
+
+## 改訂7：電池の電源スイッチ（2026-11-07、`../review.html`）
+
+- 改訂6では電池が消灯中も昇圧と LED の待機電流（概算 約 19 mA）で減り続けるため、電池と回路の間に電源スイッチを追加した。
+  小型の SMD スライドスイッチは定格 50〜300 mA で電池の電流（最大 約 0.73 A）を流せないため、**スイッチは P-MOSFET のゲートだけを切り替える**。
+  J1.1（ネット BAT_RAW）→ Q2（AO3401A）のソース、Q2 のドレイン → VBAT（XIAO の BAT＋、昇圧の入力）、R6（100 kΩ）がゲートをソースに引き上げ（OFF）、SW1（Nidec Copal CHS-01A、DIP 型スライド）がゲートを GND に落とす（ON）。
+  OFF では電池の電流がほぼ 0。OFF で USB を挿すと、Q2 のボディダイオード経由で電池は 3.5 V 程度までしか充電されない（満充電は ON）。
+- 追加部品 3 点（SW1、Q2、R6）は襟の表面の左側。回路図は J1.1 と XIAO の BAT＋をつないでいた配線を切り、ラベルで BAT_RAW と VBAT に分けた。シルクは「REV 7」と電源スイッチのそばの「PWR」。
+- 再生成：`gen/add_boost_sch.py`（起点は `pre-boost-20261106/`。昇圧と電源スイッチを一度に追加）→ `gen/place_boost.py`（16 部品の配置探索。結果は `gen/_boost_place.json`）
+  → `gen/add_boost_pcb.py` → `gen/rebuild_dna_board.py` → `gen/route_prep.py` → `gen/route_search.py`（シードを多数並列。今回は 22 本中、シード 61 が全ネットを配線）→ `gen/route_apply.py`。
+  `gen/route_board.py` の配線クラスは、BAT_RAW・VBAT・SW を 0.4 mm にした。
+- 検証：KiCad 9.0.4 の DRC 違反 0・未接続 0・回路図差異 0。ERC は警告 3 件（改訂6と同じ）。銅箔間隔の最小 0.131 mm、銅箔〜外形 0.602 mm（`gen/strict_drc.py` で実測）。3D 干渉は 68 部品で 0。
+  電池〜昇圧入力の降下は、3.0 V・0.73 A で 約 93 mV（Q2 のオン抵抗を 85 mΩ と置いた見積りを含む）。
+- 発注データ（`../fusion/`）は 68 点・15 品番で再生成。実装図に電源スイッチの拡大図（Detail F）を追加。3D 画像（`../lp/assets/img/`）・試作ページ・比較資料も更新。
+- 実機での昇圧回路と電源スイッチの動作は未確認。AO3401A の LCSC 番号と Rds(on)、SW1 の ON の向き（本体の表示に従う）は要確認。
+- 更新前の状態：`pre-switch-20261106/`（`.gitignore` の対象）。旧レビュー：`review-rev6.html`。

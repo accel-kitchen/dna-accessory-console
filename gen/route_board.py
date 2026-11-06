@@ -149,7 +149,7 @@ def make_stubs():
 
 
 def klass(n):
-    if n in ('VBAT', 'SW'):
+    if n in ('VBAT', 'SW', 'BAT_RAW'):
         return 'hi'
     return 'pwr' if n in ('POWER', 'GND', 'VUSB') else 'sig'
 
@@ -276,10 +276,10 @@ def simplify(L, pts, allowed):
 if __name__ == '__main__':
     def span(ps):
         return max(p['y'] for p in ps) - min(p['y'] for p in ps)
-    names = [n for n in nets if n not in ('POWER', 'GND', 'VBAT', 'SW')]
+    names = [n for n in nets if n not in ('POWER', 'GND', 'VBAT', 'SW', 'BAT_RAW')]
     names.sort(key=lambda n: (span(nets[n]) > 8, span(nets[n])))
     make_stubs()
-    names = ['VBAT', 'SW', 'POWER', 'GND'] + [n for n in names]
+    names = ['BAT_RAW', 'VBAT', 'SW', 'POWER', 'GND'] + [n for n in names]
     if os.environ.get('SEED'):
         import random; random.seed(int(os.environ['SEED'])); random.shuffle(names)
     prio = [n for n in os.environ.get('PRIO', '').split('|') if n in names]

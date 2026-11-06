@@ -45,12 +45,15 @@ cnt = collections.Counter(p.GetNetname() for f in fps.values() for p in f.Pads()
 def nets_of(*pads):
     return {pad(r, n).GetNetname() for r, n in pads}
 exp_power = {(u, '2') for u in leds} | {(f'C{i}', '1') for i in list(range(1, 26)) + [27, 29]} | {('D1', '1'), ('D2', '1'), ('R2', '1')}
-exp_gnd = {(u, '3') for u in leds} | {(f'C{i}', '2') for i in range(1, 30)} | {('U1', 'GND'), ('U1', 'BAT_N'), ('J1', '2'), ('U26', '2'), ('Q1', '2'), ('R3', '2'), ('R5', '2')}
+exp_gnd = {(u, '3') for u in leds} | {(f'C{i}', '2') for i in range(1, 30)} | {('U1', 'GND'), ('U1', 'BAT_N'), ('J1', '2'), ('U26', '2'), ('Q1', '2'), ('R3', '2'), ('R5', '2'), ('SW1', '2')}
 got = lambda name: {(f.GetReference(), str(p.GetNumber())) for f in fps.values() for p in f.Pads() if p.GetNetname() == name}
 chain.append((f'POWER pads = {len(exp_power)}: 24 LED VDD + C1-C25, C27, C29 + D1.K, D2.K, R2.1 (U1 is not on it)', got('POWER') == exp_power))
-chain.append((f'GND pads = {len(exp_gnd)}: 24 LED + C1-C29 + U1 GND/BAT-, J1.2, U26, Q1.S, R3, R5', got('GND') == exp_gnd))
+chain.append((f'GND pads = {len(exp_gnd)}: 24 LED + C1-C29 + U1 GND/BAT-, J1.2, U26, Q1.S, R3, R5, SW1.2', got('GND') == exp_gnd))
 chain.append(('VUSB = U1.VUSB, D2.A, Q1.G, R5.1', got('VUSB') == {('U1', 'VUSB'), ('D2', '2'), ('Q1', '1'), ('R5', '1')}))
-chain.append(('VBAT = J1.1, U1.BAT+, U26.IN, L1.1, R4.1, C26.1, C28.1', got('VBAT') == {('J1', '1'), ('U1', 'BAT_P'), ('U26', '5'), ('L1', '1'), ('R4', '1'), ('C26', '1'), ('C28', '1')}))
+chain.append(('VBAT (after the power switch) = Q2.D, U1.BAT+, U26.IN, L1.1, R4.1, C26.1, C28.1', got('VBAT') == {('Q2', '3'), ('U1', 'BAT_P'), ('U26', '5'), ('L1', '1'), ('R4', '1'), ('C26', '1'), ('C28', '1')}))
+chain.append(('BAT_RAW (battery side of the switch) = J1.1, Q2.S, R6.1', got('BAT_RAW') == {('J1', '1'), ('Q2', '2'), ('R6', '1')}))
+chain.append(('PWR_G (gate of the power switch) = Q2.G, R6.2, SW1.1 (SW1.2 is on GND)', got('PWR_G') == {('Q2', '1'), ('R6', '2'), ('SW1', '1')}))
+chain.append(('Q2 is a P-MOSFET with the source on the battery side: no net other than BAT_RAW on its source, drain on VBAT, J1.1 not directly on VBAT', pad('Q2', 2).GetNetname() == 'BAT_RAW' and pad('Q2', 3).GetNetname() == 'VBAT' and pad('J1', 1).GetNetname() == 'BAT_RAW'))
 chain.append(('SW = U26.SW, L1.2, D1.A', got('SW') == {('U26', '1'), ('L1', '2'), ('D1', '2')}))
 chain.append(('BOOST_EN = U26.EN, Q1.D, R4.2', got('BOOST_EN') == {('U26', '4'), ('Q1', '3'), ('R4', '2')}))
 chain.append(('FB = U26.FB, R2.2, R3.1', got('FB') == {('U26', '3'), ('R2', '2'), ('R3', '1')}))
@@ -59,7 +62,7 @@ def ohm(v):
     return float(v)
 vout = 0.6 * (1 + ohm(fps['R2'].GetValue()) / ohm(fps['R3'].GetValue()))
 chain.append((f'feedback divider R2 {fps["R2"].GetValue()} / R3 {fps["R3"].GetValue()}: output = 0.6 V x (1 + R2/R3) = {vout:.2f} V', abs(vout - 5.0) < 0.05))
-chain.append(('every footprint value matches the schematic part (U26 MT3608B, L1 10uH, D1/D2 1N5819HW, Q1 2N7002)', fps['U26'].GetValue() == 'MT3608B' and fps['L1'].GetValue() == '10uH' and fps['D1'].GetValue() == fps['D2'].GetValue() == '1N5819HW' and fps['Q1'].GetValue() == '2N7002'))
+chain.append(('every footprint value matches the schematic part (U26 MT3608B, L1 10uH, D1/D2 1N5819HW, Q1 2N7002, Q2 AO3401A, R6 100k, SW1 slide switch)', fps['Q2'].GetValue() == 'AO3401A' and fps['R6'].GetValue() == '100k' and fps['SW1'].GetValue() == 'SLIDE_SW' and fps['U26'].GetValue() == 'MT3608B' and fps['L1'].GetValue() == '10uH' and fps['D1'].GetValue() == fps['D2'].GetValue() == '1N5819HW' and fps['Q1'].GetValue() == '2N7002'))
 chain.append(('battery return: J1.2 and U1.BAT- are on GND (BAT- is the XIAO GND)', got('GND') >= {('J1', '2'), ('U1', 'BAT_N')}))
 chain.append(('U1 is not connected to POWER (LED power only through D1 / D2)', all(p.GetNetname() != 'POWER' for p in fps['U1'].Pads())))
 out['boost_vout_nominal'] = vout
@@ -180,12 +183,13 @@ def solve(net, source, sinks, current):
     Vfull = np.zeros(n)
     for i, k in idx.items():
         Vfull[i] = V[k]
-    worst = (0.0, None)
+    segs = []
     for a, c, r, ln in edges:
         if a in comp and c in comp and ln > 0.05:
-            cur_ = abs(Vfull[a] - Vfull[c]) / r
-            if cur_ > worst[0]:
-                worst = (cur_, RHO_SQ * ln / r)
+            segs.append((abs(Vfull[a] - Vfull[c]) / r, RHO_SQ * ln / r))
+    imax = max(x[0] for x in segs)
+    # the narrowest copper among the segments that carry (nearly) the whole current = the bottleneck of the series path
+    worst = (imax, min(w for i, w in segs if i >= 0.9 * imax))
     global LAST_BRANCH
     LAST_BRANCH = {'I_max_A': worst[0], 'width_mm': worst[1]}
     drops = {}
@@ -225,20 +229,24 @@ for label, I in (('15.35 mA per LED (datasheet typ., all white; 368 mA total)', 
 # battery side of the boost: J1 -> L1 / U26 (input current), and the GND return U26 -> J1.2
 bat = {}
 for label, I in IIN.items():
-    dv, _, _ = solve('VBAT', ('J1', '1'), [('L1', '1')], I)
+    dv, _, _ = solve('VBAT', ('Q2', '3'), [('L1', '1')], I)
+    dr, _, _ = solve('BAT_RAW', ('J1', '1'), [('Q2', '2')], I)
     dgr, _, _ = solve('GND', ('J1', '2'), [('U26', '2')], I)
-    bat[label] = {'I_in_A': I, 'vbat_path_mV': dv[('L1', '1')] * 1e3, 'gnd_return_mV': dgr[('U26', '2')] * 1e3}
+    RDS = 0.085                                              # AO3401A, Vgs = -2.5 V maximum (datasheet); the cell is at 3.0-4.2 V, so this is conservative
+    bat[label] = {'I_in_A': I, 'bat_raw_path_mV': dr[('Q2', '2')] * 1e3, 'q2_rds_on_mV': RDS * I * 1e3, 'vbat_path_mV': dv[('L1', '1')] * 1e3, 'gnd_return_mV': dgr[('U26', '2')] * 1e3,
+                  'total_battery_to_inductor_mV': (dr[('Q2', '2')] + RDS * I + dv[('L1', '1')]) * 1e3}
 branch = {}
 solve('POWER', ('D1', '1'), [(u, '2') for u in leds], 0.01535); branch['POWER trunk, all white (battery mode)'] = dict(LAST_BRANCH)
 solve('GND', ('U26', '2'), [(u, '3') for u in leds], 0.01535); branch['GND, LED return, all white'] = dict(LAST_BRANCH)
-solve('VBAT', ('J1', '1'), [('L1', '1')], 0.73); branch['VBAT, battery to inductor, 3.0 V cell'] = dict(LAST_BRANCH)
+solve('VBAT', ('Q2', '3'), [('L1', '1')], 0.73); branch['VBAT, power switch to inductor, 3.0 V cell'] = dict(LAST_BRANCH)
+solve('BAT_RAW', ('J1', '1'), [('Q2', '2')], 0.73); branch['BAT_RAW, battery connector to the power switch, 3.0 V cell'] = dict(LAST_BRANCH)
 solve('GND', ('J1', '2'), [('U26', '2')], 0.73); branch['GND, boost input return to the battery, 3.0 V cell'] = dict(LAST_BRANCH)
 out['branch_currents'] = branch
 out['battery_path'] = bat
 out['power'] = power
 # thinnest POWER / GND copper
 w_min = {}
-for net in ('POWER', 'GND', 'VBAT', 'SW', 'VUSB', 'BOOST_EN', 'FB'):
+for net in ('POWER', 'GND', 'VBAT', 'BAT_RAW', 'PWR_G', 'SW', 'VUSB', 'BOOST_EN', 'FB'):
     ws = [mm(t.GetWidth()) for t in b.GetTracks() if t.GetNetname() == net and t.Type() != pcb.PCB_VIA_T]
     w_min[net] = {'min_w': min(ws), 'max_w': max(ws), 'segments': len(ws), 'length_mm': sum(mm(t.GetLength()) for t in b.GetTracks() if t.GetNetname() == net and t.Type() != pcb.PCB_VIA_T)}
 out['trunk_widths'] = w_min

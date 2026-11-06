@@ -71,7 +71,17 @@ CAT = {
     ('100k',): dict(
         mpn='RC0402FR-07100KL', mfr='Yageo', desc='Thick-film resistor 100 kohm 1 % 1/16 W 0402',
         pkg='0402 (1005 metric)', lcsc='', link='https://www.lcsc.com/search?q=RC0402FR-07100KL', alt='Any 0402 100 kohm',
-        note='R4: boost EN pull-up to the battery. R5: gate pull-down of Q1.'),
+        note='R4: boost EN pull-up to the battery. R5: gate pull-down of Q1. R6: gate pull-up of the power switch Q2 (holds it off).'),
+    ('AO3401A',): dict(
+        mpn='AO3401A', mfr='Alpha & Omega Semiconductor', desc='P-channel MOSFET -30 V -4 A, Rds(on) 60 mohm at Vgs -4.5 V, SOT-23',
+        pkg='SOT-23', lcsc='', link='https://www.lcsc.com/search?q=AO3401A',
+        alt='Any SOT-23 P-MOSFET with pinout 1 gate / 2 source / 3 drain, Vgs(th) <= -1.3 V, Rds(on) <= 100 mohm at -2.5 V (e.g. SI2301, AO3407A)',
+        note='Q2 = battery power switch. Pin 1 = gate, 2 = source (battery side, J1 pad 1), 3 = drain (VBAT after the switch). Check the pinout of the substitute.'),
+    ('SLIDE_SW',): dict(
+        mpn='CHS-01A', mfr='Nidec Copal', desc='1-position SPST SMD slide (DIP-type) switch, J-hook terminals, 5.08 mm span, 100 mA 6 VDC',
+        pkg='SMD, J-hook, 7.3 x 3.3 mm', lcsc='C132834', link='https://lcsc.com/product-detail/DIP-Switches_Nidec-CHS-01A_C132834.html',
+        alt='Any 1-position SMD slide switch with J-hook leads and 5.08 mm lead span (KiCad footprint SW_DIP_SPSTx01_Slide_Copal_CHS-01A_W5.08mm_P1.27mm_JPin)',
+        note='SW1 = power switch: it only switches the gate of Q2 (microamps), not the battery current. ON = the end marked ON on the body. No polarity.'),
     ('102010448',): dict(
         mpn='102010448', mfr='Seeed Studio', desc='Seeed Studio XIAO nRF52840 (XIAO BLE), plain version without pin headers',
         pkg='21 x 17.8 mm castellated SMD module', lcsc='',
@@ -92,9 +102,9 @@ for key, ps in groups.items():
     refs = sorted((p['ref'] for p in ps), key=natkey)
     sides = sorted({p['side'] for p in ps})
     lines.append(dict(refs=refs, qty=len(refs), sides='/'.join(sides), value=key[0], fp=ps[0]['fp'], **c))
-order = {'102010448': 0, 'B2B-PH-SM4-TB': 1, 'XL-1010RGBC-WS2812B': 2, 'MT3608B': 3, '10uH': 4, '1N5819HW': 5, '2N7002': 6, '10uF': 7, '100nF': 8, '100': 9, '110k': 10, '15k': 11, '100k': 12}
+order = {'102010448': 0, 'B2B-PH-SM4-TB': 1, 'XL-1010RGBC-WS2812B': 2, 'MT3608B': 3, '10uH': 4, '1N5819HW': 5, '2N7002': 6, '10uF': 7, '100nF': 8, '100': 9, '110k': 10, '15k': 11, '100k': 12, 'AO3401A': 13, 'SLIDE_SW': 14}
 lines.sort(key=lambda l: order[l['value']])
-assert sum(l['qty'] for l in lines) == len(parts) == 65
+assert sum(l['qty'] for l in lines) == len(parts) == 68
 
 OUT.mkdir(exist_ok=True)
 
@@ -141,7 +151,7 @@ run('pcb', 'export', 'pos', '--format', 'csv', '--units', 'mm', '--side', 'both'
 run('pcb', 'export', 'pos', '--format', 'ascii', '--units', 'mm', '--side', 'both', '--smd-only', '-o', str(OUT / 'centroid.pos'), PCB)
 # Fusion-style column names
 rows = list(csv.DictReader(open(OUT / 'centroid_kicad.csv', encoding='utf-8')))
-assert len(rows) == 65, len(rows)
+assert len(rows) == 68, len(rows)
 with open(OUT / 'centroid.csv', 'w', newline='', encoding='utf-8') as f:
     cw = csv.writer(f)
     cw.writerow(['Designator', 'Val', 'Package', 'Mid X', 'Mid Y', 'Rotation', 'Layer'])
@@ -235,7 +245,7 @@ def detail_page(title, refs, scale, notes):
     M = 20
     import textwrap
     notes = [ln for n in notes for ln in textwrap.wrap(n, 78)]
-    W = max((bx1 - bx0) * scale + 2 * M, 440); H = (by1 - by0) * scale + 2 * M + 60 + 11 * len(notes) + 11 * len(sel)
+    W = max((bx1 - bx0) * scale + 2 * M, 600); H = (by1 - by0) * scale + 2 * M + 60 + 11 * len(notes) + 11 * len(sel)
     ox = (W - (bx1 - bx0) * scale) / 2
     mx = (lambda x: (bx1 - x) * scale + ox) if mir else (lambda x: (x - bx0) * scale + ox)
     my = lambda y: (y - by0) * scale + M + 40 + 11 * len(sel)
@@ -276,6 +286,9 @@ for title, refs, sc, notes in (
     ('Detail D - XIAO nRF52840 U1, R1 100R and C25 10uF, bottom', ['U1', 'R1', 'C25'], 7,
      ['U1: castellated SMD module (Seeed SKU 102010448) placed on the BOTTOM; USB-C connector faces the bottom board edge.',
       'R1 (100 ohm 0402) and C25 (10 uF 0805) are non-polarized.']),
+    ('Detail F - power switch SW1, Q2 and R6, top', ['SW1', 'Q2', 'R6'], 14,
+     ['SW1 (Nidec Copal CHS-01A, SMD slide switch): no polarity; ON is the end marked ON on the body. Q2 SOT-23: 1 gate, 2 source (battery side), 3 drain (VBAT after the switch).',
+      'R6 (100 kohm 0402) is non-polarized.']),
     ('Detail E - battery boost U26 (MT3608B), L1, D1, D2, Q1, top', ['U26', 'L1', 'D1', 'D2', 'Q1'], 14,
      ['U26 SOT-23-6: pad 1 = SW is on the side with three pads 1-2-3 (pad numbers are drawn). Pins: 1 SW, 2 GND, 3 FB, 4 EN, 5 VIN, 6 NC.',
       'D1 and D2: cathode (bar on the part) at pad 1. Q1 SOT-23: 1 gate, 2 source, 3 drain. L1 non-polarized.',
